@@ -1,0 +1,5 @@
+pyyaml
+pTable
+matplotlib
+gym
+tensorflow-gpu
