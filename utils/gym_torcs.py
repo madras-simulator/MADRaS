@@ -3,7 +3,6 @@ Gym interface to snakeoil3_gym.py.
 
 Provides a gym interface to the traditional server-client model.
 """
-import sys
 import os
 import math
 import collections as col

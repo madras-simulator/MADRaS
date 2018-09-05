@@ -1,6 +1,7 @@
 """Random stopping Traffic Agent."""
 import sys
 import time
+import yaml
 import random
 import numpy as np
 from controllers.pid import PID
@@ -10,22 +11,30 @@ from utils.madras_datatypes import Madras
 
 random.seed(time.time())
 madras = Madras()
+with open("./traffic/configurations.yml", "r") as ymlfile:
+    cfg = yaml.load(ymlfile)
 
 
 def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     """Traffic Play function."""
     env = TorcsEnv(vision=False, throttle=True, gear_change=False)
-    client = snakeoil3.Client(p=port, vision=False)
-    client.get_servers_input(step=0)
-    obs = client.S.d
-    ob = env.make_observation(obs)
+    ob = None
+    while ob is None:
+        try:
+            client = snakeoil3.Client(p=port, vision=False)
+            client.MAX_STEPS = np.inf
+            client.get_servers_input(step=0)
+            obs = client.S.d
+            ob = env.make_observation(obs)
+        except:
+            pass
     accel_pid = PID(np.array([10.5, 0.05, 2.8]))
     steer_pid = PID(np.array([5.1, 0.001, 0.000001]))
-    episode_count = max_eps
-    max_steps = max_steps_eps_traffic
+    episode_count = cfg['traffic']['max_eps']
+    max_steps = cfg['traffic']['max_eps']
     early_stop = 0
     velocity_i = target_vel / 300.0
-    T = random_stop_steps
+    T = cfg['traffic']['random_stop_steps']
     steer = 0.0
     accel = 0.0
     brake = 0
@@ -40,13 +49,27 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
         velocity = velocity_i
         for step in range(max_steps):
             a_t = np.asarray([steer, accel, brake])  # [steer, accel, brake]
-            ob, r_t, done, info = env.step(step, client, a_t, early_stop, 1)
-            if done:
-                break
+            try:
+                ob, r_t, done, info = env.step(step, client, a_t, early_stop)
+                if done:
+                    break
+            except Exception as e:
+                print("Exception caught at port " + str(i) + str(e))
+                ob = None
+                while ob is None:
+                    try:
+                        client = snakeoil3.Client(p=port, vision=False)
+                        client.MAX_STEPS = np.inf
+                        client.get_servers_input(step=0)
+                        obs = client.S.d
+                        ob = env.make_observation(obs)
+                    except:
+                        pass
+                    continue
             if (step <= sleep):
                 print("WAIT")
                 continue
-            if (random.randint(0, 1) == 1 and trigger == 0 and step % 500 == 0):
+            if (random.randint(0, 1) == 1 and trigger == 0 and step % 100 == 0):
                 trigger = 1
                 initiate_step = step
                 velocity = 0
@@ -75,9 +98,23 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
             else:
                 brake = 0
 
-        if 'termination_cause' in info.keys() and info['termination_cause'] == 'hardReset':
-            print 'Hard reset by some agent'
-            ob, client = env.reset(client=client)
+        try:
+            if 'termination_cause' in info.keys() and info['termination_cause'] == 'hardReset':
+                print('Hard reset by some agent')
+                ob, client = env.reset(client=client, relaunch=True)
+
+        except Exception as e:
+            print("Exception caught at point B at port " + str(i) + str(e) )
+            ob = None
+            while ob is None:
+                try:
+                    client = snakeoil3.Client(p=port, vision=False)  # Open new UDP in vtorcs
+                    client.MAX_STEPS = np.inf
+                    client.get_servers_input(0)  # Get the initial input from torcs
+                    obs = client.S.d  # Get the current full-observation from torcs
+                    ob = env.make_observation(obs)
+                except:
+                    print("Exception caught at at point C at port " + str(i) + str(e))
 
 if __name__ == "__main__":
 

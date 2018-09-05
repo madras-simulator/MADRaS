@@ -1,5 +1,6 @@
 """Normal Traffic."""
 import sys
+import yaml
 import numpy as np
 from controllers.pid import PID
 from utils.gym_torcs import TorcsEnv
@@ -7,17 +8,25 @@ import utils.snakeoil3_gym as snakeoil3
 from utils.madras_datatypes import Madras
 
 madras = Madras()
+with open("./traffic/configurations.yml", "r") as ymlfile:
+    cfg = yaml.load(ymlfile)
 
 
 def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     """Traffic Play function."""
     env = TorcsEnv(vision=False, throttle=True, gear_change=False)
-    client = snakeoil3.Client(p=port, vision=False)
-    client.get_servers_input(step=0)
-    obs = client.S.d
-    ob = env.make_observation(obs)
-    episode_count = max_eps
-    max_steps = max_steps_eps_traffic
+    ob = None
+    while ob is None:
+        try:
+            client = snakeoil3.Client(p=port, vision=False)
+            client.MAX_STEPS = np.inf
+            client.get_servers_input(step=0)
+            obs = client.S.d
+            ob = env.make_observation(obs)
+        except:
+            pass
+    episode_count = cfg['traffic']['max_eps']
+    max_steps = cfg['traffic']['max_steps_eps']
     early_stop = 0
     velocity = target_vel / 300.0
     accel_pid = PID(np.array([10.5, 0.05, 2.8]))
@@ -25,7 +34,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     steer = 0.0
     accel = 0.0
     brake = 0
-    print velocity
+    print(velocity)
     for i in range(episode_count):
         info = {'termination_cause': 0}
         steer = 0.0
@@ -33,9 +42,23 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
         brake = 0
         for step in range(max_steps):
             a_t = np.asarray([steer, accel, brake])  # [steer, accel, brake]
-            ob, r_t, done, info = env.step(step, client, a_t, early_stop, 1)
-            if done:
-                break
+            try:
+                ob, r_t, done, info = env.step(step, client, a_t, early_stop)
+                if done:
+                    break
+            except Exception as e:
+                print("Exception caught at port " + str(i) + str(e))
+                ob = None
+                while ob is None:
+                    try:
+                        client = snakeoil3.Client(p=port, vision=False)
+                        client.MAX_STEPS = np.inf
+                        client.get_servers_input(step=0)
+                        obs = client.S.d
+                        ob = env.make_observation(obs)
+                    except:
+                        pass
+                    continue
             if (step <= sleep):
                 print("WAIT")
                 continue
@@ -57,10 +80,23 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                 brake = 1
             else:
                 brake = 0
+        try:
+            if 'termination_cause' in info.keys() and info['termination_cause'] == 'hardReset':
+                print('Hard reset by some agent')
+                ob, client = env.reset(client=client, relaunch=True)
 
-        if 'termination_cause' in info.keys() and info['termination_cause'] == 'hardReset':
-            print('Hard reset by some agent')
-            ob, client = env.reset(client=client)
+        except Exception as e:
+            print("Exception caught at point B at port " + str(i) + str(e) )
+            ob = None
+            while ob is None:
+                try:
+                    client = snakeoil3.Client(p=port, vision=False)  # Open new UDP in vtorcs
+                    client.MAX_STEPS = np.inf
+                    client.get_servers_input(0)  # Get the initial input from torcs
+                    obs = client.S.d  # Get the current full-observation from torcs
+                    ob = env.make_observation(obs)
+                except:
+                    print("Exception caught at at point C at port " + str(i) + str(e))
 
 
 if __name__ == "__main__":
