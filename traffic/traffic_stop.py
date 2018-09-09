@@ -67,7 +67,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                         pass
                     continue
             if (step <= sleep):
-                print("WAIT")
+                print("WAIT" + str(port))
                 continue
             if (random.randint(0, 1) == 1 and trigger == 0 and step % 100 == 0):
                 trigger = 1

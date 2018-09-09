@@ -65,7 +65,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                         pass
                     continue
             if (step <= sleep):
-                print("WAIT")
+                print("WAIT" + str(port))
                 continue
             opp = ob.opponents
             front = np.array([opp[15], opp[16], opp[17], opp[18], opp[19]])

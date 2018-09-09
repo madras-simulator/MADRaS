@@ -64,7 +64,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                         pass
                     continue
             if (step <= sleep):
-                print("WAIT")
+                print("WAIT" + str(port))
                 continue
             velocity = velocity_i + A * math.sin(step / T)
             opp = ob.opponents
