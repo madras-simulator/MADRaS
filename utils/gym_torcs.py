@@ -3,17 +3,14 @@ Gym interface to snakeoil3_gym.py.
 
 Provides a gym interface to the traditional server-client model.
 """
-import sys
 import os
 import math
 import collections as col
 from gym import spaces
 import numpy as np
-from madras_datatypes import Madras
-import snakeoil3_gym as snakeoil3
+from utils.madras_datatypes import Madras
+import utils.snakeoil3_gym as snakeoil3
 
-
-sys.path.append('./sample_DDPG_agent/')
 madras = Madras()
 
 
