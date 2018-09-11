@@ -1,7 +1,9 @@
 """
 Gym Madras Env Wrapper.
 
-Built on top of gym_torcs
+Built on top of gym_torcs https://github.com/ugo-nama-kun/gym_torcs/blob/master/gym_torcs.py
+
+This is an OpenAI gym environment wrapper for the MADRaS simulator. For more information on the OpenAI Gym interface, please refer to: https://gym.openai.com
 """
 
 import math
@@ -17,7 +19,7 @@ with open("./sample_DDPG_agent/configurations.yml", "r") as ymlfile:
 
 
 class MadrasEnv(TorcsEnv):
-    """Gym Madras Env."""
+    """Definition of the Gym Madras Env."""
 
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=3001, pid_assist=True,
@@ -47,7 +49,7 @@ class MadrasEnv(TorcsEnv):
         self.ob = None
 
     def reset(self, prev_step_info=None):
-        """Reset Method."""
+        """Reset Method. To be called at the end of each episode"""
         if self.initial_reset:
             while self.ob is None:
                 try:
@@ -98,15 +100,14 @@ class MadrasEnv(TorcsEnv):
         return s_t
 
     def step(self, desire):
-        """Step Function."""
+    	"""Step method to be called at each time step."""
         r_t = 0
 
         for PID_step in range(self.PID_latency):
                 # Implement the desired trackpos and velocity using PID
             if self.pid_assist:
                 self.accel_PID.update_error((desire[1] - self.prev_vel))
-                self.steer_PID.update_error((-(self.prev_lane - desire[0]) /
-                                            10 + self.prev_angle))
+                self.steer_PID.update_error((-(self.prev_lane - desire[0])/10 + self.prev_angle))
                 if self.accel_PID.output() < 0.0:
                     brake = 1
                 else:
@@ -142,7 +143,7 @@ class MadrasEnv(TorcsEnv):
             if (math.isnan(r)):
                 r = 0.0
             r_t += r  # accumulate rewards over all the time steps
-            # self.distance_traversed+=self.ob.speedX*np.cos(self.ob.angle)
+
             self.distance_traversed = self.client.S.d['distRaced']
             r_t += (self.distance_traversed - self.prev_dist) /\
                 cfg['configs']['track_len']
@@ -150,7 +151,6 @@ class MadrasEnv(TorcsEnv):
             if self.distance_traversed >= cfg['configs']['track_len']:
                 done = True
             if done:
-                    # r_t += self.distance_traversed/7041.68
                 break
 
         s_t1 = np.hstack((self.ob.angle, self.ob.track, self.ob.trackPos,
