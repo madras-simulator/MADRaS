@@ -21,7 +21,7 @@ initial_wait_period = 200		# to give the other cars a headstart of these many st
 epsilon_start  	= 1				
 start_reward 	= -10000			# these need to be changed if restarting the playGame.py script
 
-save_location = './weights'
+save_location = './weights/'
 
 torcsPort 	= 3101
 configFile 	= '~/.torcs/config/raceman/quickrace.xml'

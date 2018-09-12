@@ -28,8 +28,8 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 	state_dim = 65  #of sensors input
 
 	env_name = 'Torcs_Env'
-	save_location = save_location + str(port) + "/"
-	agent = DDPG(env_name, state_dim, action_dim, save_location)
+	weights_location = save_location + str(port) + "/"
+	agent = DDPG(env_name, state_dim, action_dim, weights_location)
 
 	# Generate a Torcs environment
 	print("I have been asked to use port: ", port)
