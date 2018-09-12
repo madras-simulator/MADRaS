@@ -11,23 +11,17 @@
 visualize_after = 5
 is_training 	= 1
 
-# total_explore  	= 300000.0
 total_explore  	= 600000.0
 max_eps 	= 6000
 max_steps_eps 	= 10000
 
-wait_at_beginning 	= 0
+wait_at_beginning = 0
 initial_wait_period = 200		# to give the other cars a headstart of these many steps
 
-epsilon_start  	= 1				# 
+epsilon_start  	= 1				
 start_reward 	= -10000			# these need to be changed if restarting the playGame.py script
 
-save_location = './'
-# save_location = 'saved_networks_our_traffic_noBrakes_backup_370episodes'
-# save_location = 'saved_networks_our_traffic_brakes_after230episodes/'
-# save_location = 'saved_networks_our_traffic_noBrakes_backup_230episodes/'
-# save_location = 'saved_networks_our_traffic_noBrakes/'
-# save_location = 'saved_networks_scr_noTraffic/'				# test this playGame_old.py
+save_location = './weights'
 
 torcsPort 	= 3101
 configFile 	= '~/.torcs/config/raceman/quickrace.xml'

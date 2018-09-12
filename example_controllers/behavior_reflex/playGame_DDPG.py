@@ -1,11 +1,10 @@
 import sys
-sys.path.append('./sample_DDPG_agent/') 
+sys.path.append('../../utils/') 
+from gym_torcs import TorcsEnv
+sys.path.append('./DDPG/') 
 
 import numpy as np
-np.random.seed(1337)
-from gym_torcs import TorcsEnv
 import snakeoil3_gym as snakeoil3
-
 import collections as col
 import random
 import argparse
@@ -20,14 +19,16 @@ from ddpg import *
 import gc
 gc.enable()
 
-# config parameters are printed in main
+np.random.seed(1337)
+
 
 def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 means simply Run
 	
 	action_dim = 3  #Steering/Acceleration/Brake
 	state_dim = 65  #of sensors input
+
 	env_name = 'Torcs_Env'
-	save_location = "./weights/"+str(port)+"/"
+	save_location = save_location + str(port) + "/"
 	agent = DDPG(env_name, state_dim, action_dim, save_location)
 
 	# Generate a Torcs environment
@@ -63,7 +64,6 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 	print("TORCS Experiment Start.")
 	for i in range(episode_count):
 
-		save_indicator = 0
 		early_stop = 1
 		total_reward = 0.
 		info = {'termination_cause':0}
@@ -79,15 +79,13 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 			if (train_indicator):
 			    epsilon -= 1.0 / EXPLORE
 			    epsilon = max(epsilon, epsilon_steady_state) 
-			    a_t = agent.noise_action(s_t,epsilon) #Take noisy actions during training
+			    a_t = agent.noise_action(s_t,epsilon)
 			else:
 			    a_t = agent.action(s_t)	# [steer, accel, brake]
 			try:
 				ob, r_t, done, info = env.step(step, client, a_t, early_stop)
 				if done:
 					break
-				# print done
-				# print 'Action taken'
 				analyse_info(info, printing=False)
 
 				s_t1 = np.hstack((ob.angle, ob.track, ob.trackPos, ob.speedX, ob.speedY,  ob.speedZ, ob.wheelSpinVel/100.0, ob.rpm, ob.opponents))
@@ -95,19 +93,19 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 				speed_array.append(ob.speedX*np.cos(ob.angle))
 				trackPos_array.append(ob.trackPos)
 
-			#Checking for nan rewards: TODO: This was actually below the following block
+			#Checking for nan rewards:
 				if (math.isnan( r_t )):
 					r_t = 0.0
 					for bad_r in range( 50 ):
 						print( 'Bad Reward Found' )
-					break #Introduced by Anirban
+					break
 
 			# Add to replay buffer only if training
 				if (train_indicator):
 					agent.perceive(s_t,a_t,r_t,s_t1,done) # Add experience to replay buffer
 
 			except Exception as e:
-				print("Exception caught at port " + str(i) + str(e) )
+				print("Exception caught after training, at port " + str(i) + str(e) )
 				ob = None
 				while ob is None:
 					try:
@@ -130,12 +128,7 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 			if done:
 				break
 
-
-		if ((save_indicator==1) and (train_indicator ==1 )):
-                        # Uncomment this for saving only the best model.
-			#if (total_reward >= best_reward): 
-			#	print("Now we save model with reward " + str(total_reward) + " previous best reward was " + str(best_reward))
-			best_reward = total_reward
+		if ((train_indicator ==1 )):
 			if(i%300 == 0):
 				agent.saveNetwork(i)     
 	
@@ -154,7 +147,7 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 			else:
 				ob, client = env.reset(client=client, relaunch=True) 
 		except Exception as e:
-			print("Exception caught at point B at port " + str(i) + str(e) )
+			print("Exception caught after episode end, at port " + str(i) + str(e) )
 			ob = None
 			while ob is None:
 				try:
@@ -164,12 +157,10 @@ def playGame(f_diagnostics, train_indicator, port=3101):    # 1 means Train, 0 m
 					obs = client.S.d  # Get the current full-observation from torcs
 					ob = env.make_observation(obs)
 				except:
-					print("Exception caught at at point C at port " + str(i) + str(e) )
+					print("Another exception caught while handling exception, at port " + str(i) + str(e) )
 
 		  
 		s_t = np.hstack((ob.angle, ob.track, ob.trackPos, ob.speedX, ob.speedY,  ob.speedZ, ob.wheelSpinVel/100.0, ob.rpm, ob.opponents))
-
-		# document_episode(i, distance_traversed, speed_array, trackPos_array, info, running_avg_reward, f_diagnostics)
 
 	env.end()  # This is for shutting down TORCS
 	print("Finish.")
