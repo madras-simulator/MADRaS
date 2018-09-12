@@ -1,6 +1,8 @@
-"""Normal Traffic."""
+"""Random Lane changing Traffic Agent."""
 import sys
+import time
 import yaml
+import random
 import numpy as np
 from controllers.pid import PID
 from utils.gym_torcs import TorcsEnv
@@ -10,6 +12,8 @@ from utils.madras_datatypes import Madras
 madras = Madras()
 with open("./traffic/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
+
+random.seed(time.time())
 
 
 def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
@@ -40,6 +44,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
         steer = 0.0
         accel = 0.0
         brake = 0
+
         for step in range(max_steps):
             a_t = np.asarray([steer, accel, brake])  # [steer, accel, brake]
             try:
@@ -67,7 +72,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
             closest_front = np.min(front)
             print(ob.speedX * 300)
             vel_error = velocity - ob.speedX
-            angle_error = -(ob.trackPos - angle) / 10 + ob.angle
+            angle_error = -(ob.trackPos + angle) / 10 + ob.angle + random.choice([1, -1]) * 0.05
             steer_pid.update_error(angle_error)
             accel_pid.update_error(vel_error)
             accel = accel_pid.output()
@@ -80,6 +85,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                 brake = 1
             else:
                 brake = 0
+
         try:
             if 'termination_cause' in info.keys() and info['termination_cause'] == 'hardReset':
                 print('Hard reset by some agent')
@@ -97,7 +103,6 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                     ob = env.make_observation(obs)
                 except:
                     print("Exception caught at at point C at port " + str(i) + str(e))
-
 
 if __name__ == "__main__":
 
