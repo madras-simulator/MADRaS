@@ -1,4 +1,4 @@
-"""Traffic agent created using just snakeoil interface."""
+"""Traffic agent created using snakeoil API."""
 
 import sys
 import numpy as np
