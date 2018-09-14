@@ -1,9 +1,15 @@
 """
 Gym Madras Env Wrapper.
 
+This is an OpenAI gym environment wrapper for the MADRaS simulator. For more information on the OpenAI Gym interface, please refer to: https://gym.openai.com
+
 Built on top of gym_torcs https://github.com/ugo-nama-kun/gym_torcs/blob/master/gym_torcs.py
 
-This is an OpenAI gym environment wrapper for the MADRaS simulator. For more information on the OpenAI Gym interface, please refer to: https://gym.openai.com
+The following enhancements were made for Multi-agent synchronization using exception handling:
+- All the agents connect to the same TORCS engine through UDP ports
+- If an agent fails to connect to the TORCS engine, it keeps on trying in a loop until successful
+- Restart the episode for all the agents when any one of the learning agents terminates its episode
+
 """
 
 import math
@@ -107,7 +113,8 @@ class MadrasEnv(TorcsEnv):
                 # Implement the desired trackpos and velocity using PID
             if self.pid_assist:
                 self.accel_PID.update_error((desire[1] - self.prev_vel))
-                self.steer_PID.update_error((-(self.prev_lane - desire[0])/10 + self.prev_angle))
+                self.steer_PID.update_error((-(self.prev_lane - desire[0])/10 \
+                    + self.prev_angle))
                 if self.accel_PID.output() < 0.0:
                     brake = 1
                 else:
