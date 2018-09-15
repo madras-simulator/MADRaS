@@ -59,7 +59,23 @@ _Tested on ubuntu-16.04_
 git clone https://github.com/rudrasohan/M.A.D.R.A.S_dev.git
 sudo -H pip3 install -r requirements.txt
 ```
-### Maintainers
+## Maintainers
  - [Sohan Rudra](https://github.com/rudrasohan)
  - [Anirban Santara](https://github.com/Santara)
  - [Meha Kaushik](https://github.com/MehaKaushik)
+ 
+ ## Credits
+ 
+ ### Developers:
+ - [Abhishek Naik](https://github.com/abhisheknaik96)
+ - [Sohan Rudra](https://github.com/rudrasohan)
+ - [Meha Kaushik](https://github.com/MehaKaushik)
+ - [Buridi Aditya](https://github.com/buridiaditya)
+ - [Srijan Bansal](https://github.com/Srijanb97)
+ 
+ ### Project Manager:
+ - [Anirban Santara](https://github.com/Santara)
+ 
+ ### Mentors:
+ - [Bharat Kaul](https://ai.intel.com/bio/bharat-kaul/)
+ - [Balaraman Ravindran](https://www.cse.iitm.ac.in/~ravi/) 
