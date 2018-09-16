@@ -1,13 +1,18 @@
-import gym
-from gym import spaces
-import snakeoil3_gym as snakeoil3
-import numpy as np
-import numpy as np
-import copy
-import collections as col
+"""
+Gym interface to snakeoil3_gym.py.
+
+Provides a gym interface to the traditional server-client model.
+"""
 import os
-import time
-import random
+import math
+import collections as col
+from gym import spaces
+import numpy as np
+from utils.madras_datatypes import Madras
+import utils.snakeoil3_gym as snakeoil3
+
+madras = Madras()
+
 
 class TorcsEnv:
     terminal_judge_start = 100      # If after 100 timestep still no progress, terminated
