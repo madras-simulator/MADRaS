@@ -2,7 +2,6 @@ import sys
 sys.path.append('../../utils/') 
 from gym_torcs import TorcsEnv
 sys.path.append('./DDPG/') 
-
 import numpy as np
 import snakeoil3_gym as snakeoil3
 import collections as col
