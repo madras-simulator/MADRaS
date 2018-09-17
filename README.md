@@ -56,7 +56,7 @@ _Tested on ubuntu-16.04_
 # Installation M.A.D.R.A.S
 
 ``` shell
-git clone https://github.com/rudrasohan/M.A.D.R.A.S_dev.git
+git clone https://github.com/madras-simulator/MADRaS
 sudo -H pip3 install -r requirements.txt
 ```
 ## Maintainers
