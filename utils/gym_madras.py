@@ -11,7 +11,9 @@ The following enhancements were made for Multi-agent synchronization using excep
 - Restart the episode for all the agents when any one of the learning agents terminates its episode
 
 """
-
+import sys
+sys.path.append('../../utils/')
+sys.path.append('../../controllers')
 import math
 import yaml
 from copy import deepcopy
@@ -20,19 +22,22 @@ import snakeoil3_gym as snakeoil3
 from gym_torcs import TorcsEnv
 from pid import PID
 
-with open("./sample_DDPG_agent/configurations.yml", "r") as ymlfile:
+with open("./configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 
 class MadrasEnv(TorcsEnv):
     """Definition of the Gym Madras Env."""
-
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=3001, pid_assist=True,
                  CLIENT_MAX_STEPS=np.inf):
         """Init Method."""
+        self.pid_assist = pid_assist
+        if self.pid_assist:
+            self.action_dim = 2  # LanePos, Velocity
+        else:
+            self.action_dim = 3  # Accel, Steer, Brake
         TorcsEnv.__init__(self, vision=False, throttle=True, gear_change=False)
-        self.action_dim = 2  # LanePos, Velocity
         self.state_dim = 29  # No. of sensors input
         self.env_name = 'Madras_Env'
         self.port = port
@@ -40,7 +45,6 @@ class MadrasEnv(TorcsEnv):
         self.client_type = 0  # Snakeoil client type
         self.initial_reset = True
         self.early_stop = True
-        self.pid_assist = pid_assist
         if self.pid_assist:
             self.PID_latency = 10
         else:
@@ -106,15 +110,15 @@ class MadrasEnv(TorcsEnv):
         return s_t
 
     def step(self, desire):
-    	"""Step method to be called at each time step."""
+        """Step method to be called at each time step."""
         r_t = 0
 
         for PID_step in range(self.PID_latency):
                 # Implement the desired trackpos and velocity using PID
             if self.pid_assist:
                 self.accel_PID.update_error((desire[1] - self.prev_vel))
-                self.steer_PID.update_error((-(self.prev_lane - desire[0])/10 \
-                    + self.prev_angle))
+                self.steer_PID.update_error((-(self.prev_lane - desire[0]) / 10 +
+                                            self.prev_angle))
                 if self.accel_PID.output() < 0.0:
                     brake = 1
                 else:
@@ -153,9 +157,9 @@ class MadrasEnv(TorcsEnv):
 
             self.distance_traversed = self.client.S.d['distRaced']
             r_t += (self.distance_traversed - self.prev_dist) /\
-                cfg['configs']['track_len']
+                cfg['madras']['track_len']
             self.prev_dist = deepcopy(self.distance_traversed)
-            if self.distance_traversed >= cfg['configs']['track_len']:
+            if self.distance_traversed >= cfg['madras']['track_len']:
                 done = True
             if done:
                 break
