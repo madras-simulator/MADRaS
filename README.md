@@ -53,7 +53,7 @@ cd scr-client-cpp
 make
 ```
 _Tested on ubuntu-16.04_
-# Installation M.A.D.R.A.S
+# Installation MADRaS
 
 ``` shell
 git clone https://github.com/madras-simulator/MADRaS
