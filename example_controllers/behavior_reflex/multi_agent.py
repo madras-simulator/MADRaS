@@ -17,7 +17,7 @@ with tf.Session() as sess:
         worker_threads = []
 #with pymp.Parallel(4) as p:		#uncomment this for parallelization of threads
         for i in range(num_workers):
-                worker_work = lambda: (playGame_DDPG.playGame(f_diagnostics=""+str(i), train_indicator=1, port=3101+i))
+                worker_work = lambda: (playGame_DDPG.playGame(f_diagnostics=""+str(i), train_indicator=1, port=3001+i))
                 t = threading.Thread(target=(worker_work))
                 t.start()
                 sleep(0.5)
