@@ -4,7 +4,7 @@ Gym interface to snakeoil3_gym.py.
 Provides a gym interface to the traditional server-client model.
 """
 import sys
-sys.path.append('../../utils/') 
+sys.path.append('../../utils/')
 import os
 import math
 import collections as col
@@ -12,6 +12,9 @@ from gym import spaces
 import numpy as np
 import copy
 import snakeoil3_gym as snakeoil3
+from madras_datatypes import Madras
+
+madras = Madras()
 
 
 class TorcsEnv:
@@ -20,7 +23,7 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=65, act_dim=3):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3):
         self.vision = vision
         self.throttle = throttle
         self.gear_change = gear_change
@@ -35,23 +38,23 @@ class TorcsEnv:
         if throttle is False:                           # Throttle is generally True
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
         else:
-            high = np.array([1., 1., 1.])
-            low = np.array([-1., 0., 0.])
+            high = np.array([1., 1., 1.], dtype=madras.floatX)
+            low = np.array([-1., 0., 0.], dtype=madras.floatX)
             self.action_space = spaces.Box(low=low, high=high)    # steer,accel,brake
 
         if vision is False:                             # Vision has to be set True if you need the images from the simulator 
-            high = np.inf*np.ones(self.obs_dim)
+            high = np.inf * np.ones(self.obs_dim)
             low = -high
             self.observation_space = spaces.Box(low, high)
         else:
-            high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255], dtype=theano.config.floatX)
-            low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0], dtype=theano.config.floatX)
-            self.observation_space = spaces.Box(low=low, high=high)			
+            high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255], dtype=madras.floatX)
+            low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0], dtype=madras.floatX)
+            self.observation_space = spaces.Box(low=low, high=high)
 
 
     def terminate(self):
         episode_terminate = True
-        client.R.d['meta'] = True
+        # client.R.d['meta'] = True
         print('Terminating because bad episode')
 
 
@@ -133,7 +136,7 @@ class TorcsEnv:
         damage = np.array(obs['damage'])
         rpm = np.array(obs['rpm'])
 
-        progress = sp*np.cos(obs['angle']) - np.abs(sp*np.sin(obs['angle'])) - sp * np.abs(obs['trackPos'])
+        progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) - sp * np.abs(obs['trackPos'])
         reward = progress
 
         # collision detection
@@ -142,18 +145,11 @@ class TorcsEnv:
 
         # Termination judgement #########################
         episode_terminate = False
-        if ( (abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop ):  # Episode is terminated if the car is out of track
+        if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
             reward = -200
             episode_terminate = True
             client.R.d['meta'] = True
             print('Terminating because Out of Track')
-
-        if self.terminal_judge_start < self.time_step: # Episode terminates if the progress of agent is small
-             if ( (progress < self.termination_limit_progress) and early_stop ):
-                 print("No progress")
-                 episode_terminate = True
-                 client.R.d['meta'] = True
-                 print('Terminating because of Small Progress')
 
         if np.cos(obs['angle']) < 0: # Episode is terminated if the agent runs backward
             episode_terminate = True
@@ -247,17 +243,17 @@ class TorcsEnv:
                      'trackPos',
                      'wheelSpinVel']
             Observation = col.namedtuple('Observaion', names)
-            return Observation(focus=np.array(raw_obs['focus'], dtype=np.float32)/200.,
-                               speedX=np.array(raw_obs['speedX'], dtype=np.float32)/300.0,
-                               speedY=np.array(raw_obs['speedY'], dtype=np.float32)/300.0,
-                               speedZ=np.array(raw_obs['speedZ'], dtype=np.float32)/300.0,
-                               angle=np.array(raw_obs['angle'], dtype=np.float32)/3.1416,
-                               damage=np.array(raw_obs['damage'], dtype=np.float32),
-                               opponents=np.array(raw_obs['opponents'], dtype=np.float32)/200.,
-                               rpm=np.array(raw_obs['rpm'], dtype=np.float32)/10000,
-                               track=np.array(raw_obs['track'], dtype=np.float32)/200.,
-                               trackPos=np.array(raw_obs['trackPos'], dtype=np.float32)/1.,
-                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=np.float32))
+            return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
+                               speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/300.0,
+                               speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/300.0,
+                               speedZ=np.array(raw_obs['speedZ'], dtype=madras.floatX)/300.0,
+                               angle=np.array(raw_obs['angle'], dtype=madras.floatX)/3.1416,
+                               damage=np.array(raw_obs['damage'], dtype=madras.floatX),
+                               opponents=np.array(raw_obs['opponents'], dtype=madras.floatX)/200.,
+                               rpm=np.array(raw_obs['rpm'], dtype=madras.floatX)/10000,
+                               track=np.array(raw_obs['track'], dtype=madras.floatX)/200.,
+                               trackPos=np.array(raw_obs['trackPos'], dtype=madras.floatX)/1.,
+                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=madras.floatX))
         else:
             names = ['focus',
                      'speedX', 'speedY', 'speedZ', 'angle',
@@ -272,13 +268,13 @@ class TorcsEnv:
             # Get RGB from observation
             image_rgb = self.obs_vision_to_image_rgb(raw_obs[names[8]])
 
-            return Observation(focus=np.array(raw_obs['focus'], dtype=np.float32)/200.,
-                               speedX=np.array(raw_obs['speedX'], dtype=np.float32)/self.default_speed,
-                               speedY=np.array(raw_obs['speedY'], dtype=np.float32)/self.default_speed,
-                               speedZ=np.array(raw_obs['speedZ'], dtype=np.float32)/self.default_speed,
-                               opponents=np.array(raw_obs['opponents'], dtype=np.float32)/200.,
-                               rpm=np.array(raw_obs['rpm'], dtype=np.float32),
-                               track=np.array(raw_obs['track'], dtype=np.float32)/200.,
-                               trackPos=np.array(raw_obs['trackPos'], dtype=np.float32)/1.,
-                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=np.float32),
+            return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
+                               speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/self.default_speed,
+                               speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/self.default_speed,
+                               speedZ=np.array(raw_obs['speedZ'], dtype=madras.floatX)/self.default_speed,
+                               opponents=np.array(raw_obs['opponents'], dtype=madras.floatX)/200.,
+                               rpm=np.array(raw_obs['rpm'], dtype=madras.floatX),
+                               track=np.array(raw_obs['track'], dtype=madras.floatX)/200.,
+                               trackPos=np.array(raw_obs['trackPos'], dtype=madras.floatX)/1.,
+                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=madras.floatX),
                                img=image_rgb)
