@@ -1,0 +1,21 @@
+agent:
+  total_explore: 6000000.0
+  max_eps: 400
+  max_steps_eps: 5000
+  epsilon_start: 0.4
+  delta: 0.2
+  start_reward: -10000.0
+  reward_threshold: -200
+  thresh_coin_toss: 0.3
+  speed_buffer_size: 100
+  velocity_limit: 100.0
+  acceleration_limit: 0.5
+
+configs:
+  save_location: "save_network_checkpoints/"
+  f_diagnostics: "./logger.log"
+  torcsPort: 3001
+  configFile: "~/.torcs/config/raceman/quickrace.xml"
+  fig_save_dir: "./figures_heatmaps"
+  is_training: 1
+  track_len: 7014.68
