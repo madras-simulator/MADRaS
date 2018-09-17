@@ -5,7 +5,7 @@ import playGame_DDPG_pid
 from time import sleep, time
 
 with tf.device("/cpu:0"):
-        num_workers = 6  #  multiprocessing.cpu_count() #use this when you want to use all the cpus
+        num_workers = 3  #  multiprocessing.cpu_count() #use this when you want to use all the cpus
         print("numb of workers is" + str(num_workers))
 
 with tf.Session() as sess:
