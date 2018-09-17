@@ -22,8 +22,6 @@ import snakeoil3_gym as snakeoil3
 from gym_torcs import TorcsEnv
 from pid import PID
 
-with open("./configurations.yml", "r") as ymlfile:
-    cfg = yaml.load(ymlfile)
 
 
 class MadrasEnv(TorcsEnv):
@@ -57,6 +55,7 @@ class MadrasEnv(TorcsEnv):
         self.prev_vel = 0
         self.prev_dist = 0
         self.ob = None
+        self.track_len = 7014.6
 
     def reset(self, prev_step_info=None):
         """Reset Method. To be called at the end of each episode"""
@@ -157,9 +156,9 @@ class MadrasEnv(TorcsEnv):
 
             self.distance_traversed = self.client.S.d['distRaced']
             r_t += (self.distance_traversed - self.prev_dist) /\
-                cfg['madras']['track_len']
+                self.track_len
             self.prev_dist = deepcopy(self.distance_traversed)
-            if self.distance_traversed >= cfg['madras']['track_len']:
+            if self.distance_traversed >= self.track_len:
                 done = True
             if done:
                 break
