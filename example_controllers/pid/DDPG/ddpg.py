@@ -1,16 +1,15 @@
 """Deep Deterministic Policy Gradient Algorithm."""
 import math
 import random
-import yaml
 import numpy as np
 from copy import deepcopy
 import tensorflow as tf
 
-from sample_DDPG.pid_control.OU import OU
-from sample_DDPG.pid_control.critic_network import CriticNetwork
-from sample_DDPG.pid_control.actor_network import ActorNetwork
-from sample_DDPG.pid_control.ReplayBuffer import ReplayBuffer
-from utils.display_utils import *
+from OU import OU
+from critic_network import CriticNetwork
+from actor_network import ActorNetwork
+from ReplayBuffer import ReplayBuffer
+from display_utils import *
 
 # Hyper Parameters:
 
@@ -19,14 +18,11 @@ REPLAY_START_SIZE = 100
 BATCH_SIZE = 32
 GAMMA = 0.99
 
-with open("./sample_DDPG/pid_control/configurations.yml", "r") as ymlfile:
-    cfg = yaml.load(ymlfile)
-
 
 class DDPG:
     """Class DDPG."""
 
-    def __init__(self, env_name, state_dim, action_dim):
+    def __init__(self, env_name, state_dim, action_dim, save_location, reward_threshold, thresh_coin_toss):
         """Init Method."""
         self.name = 'DDPG'  # name for uploading results
         self.env_name = env_name
@@ -34,6 +30,7 @@ class DDPG:
         # with both their target networks
         self.state_dim = state_dim
         self.action_dim = action_dim
+        self.save_location = save_location
 
         # Ensure action bound is symmetric
         self.time_step = 0
@@ -54,12 +51,14 @@ class DDPG:
 
         # loading networks
         self.saver = tf.train.Saver()
-        checkpoint = tf.train.get_checkpoint_state(cfg['configs']['save_location'])
+        checkpoint = tf.train.get_checkpoint_state(save_location)
         if checkpoint and checkpoint.model_checkpoint_path:
             self.saver.restore(self.sess, checkpoint.model_checkpoint_path)
             print("Successfully loaded:", checkpoint.model_checkpoint_path)
         else:
             print("Could not find old network weights")
+        self.reward_threshold = reward_threshold
+        self.thresh_coin_toss = thresh_coin_toss
 
     def train(self):
         """Train Method."""
@@ -72,7 +71,7 @@ class DDPG:
         done_batch = np.asarray([data.done for data in minibatch])
 
         # for action_dim = 1
-        action_batch = np.resize(action_batch,[BATCH_SIZE,self.action_dim])
+        action_batch = np.resize(action_batch, [BATCH_SIZE, self.action_dim])
 
         # Calculate y_batch
 
@@ -96,10 +95,11 @@ class DDPG:
         self.actor_network.update_target()
         self.critic_network.update_target()
 
-    def saveNetwork(self):
+    def saveNetwork(self, i):
         """Saver."""
-        self.saver.save(self.sess, cfg['configs']['save_location'] +
-                        self.env_name + 'network' + 'ddpg.ckpt', global_step=self.time_step)
+        self.saver.save(self.sess, self.save_location +
+                        self.env_name + 'network' + str(i) +
+                        'DDPG.ckpt', global_step=self.time_step)
 
     def action(self, state):
         """Compute action."""
@@ -126,7 +126,7 @@ class DDPG:
 
     def perceive(self, temp_buffer, traj_reward):
         """Store transition (s_t,a_t,r_t,s_{t+1}) in replay buffer."""
-        if (traj_reward > cfg['agent']['reward_threshold']) or\
+        if (traj_reward > self.reward_threshold) or\
            (self.replay_buffer.num_experiences == 0):
             self.episode_printer.data["Replay_Buffer"] = "GOOD-Added"
             # print("Adding GOOD trajectory with reward %0.2f"%traj_reward)
@@ -145,7 +145,7 @@ class DDPG:
                     self.replay_buffer.add(sample[0], sample[1],
                                            sample[2], sample[3], sample[4], TD)
         else:
-            if random.uniform(0, 1) < cfg['agent']['thresh_coin_toss']:
+            if random.uniform(0, 1) < self.thresh_coin_toss:
                 self.episode_printer.data["Replay_Buffer"] = "BAD-Added"
                 # print("Adding LUCKY BAD trajectory with reward%0.2f"%traj_reward)
                 for sample in temp_buffer:
@@ -171,6 +171,3 @@ class DDPG:
         if self.replay_buffer.count() > REPLAY_START_SIZE:
             self.train()
         return self.episode_printer
-
-
-

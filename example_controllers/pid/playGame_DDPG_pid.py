@@ -4,7 +4,8 @@ DDPG Training.
 PID Control = True
 """
 import sys
-
+sys.path.append("../../utils/")
+sys.path.append("./DDPG/")
 import os
 import gc
 import yaml
@@ -12,10 +13,10 @@ from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils.madras_datatypes import Madras
+from madras_datatypes import Madras
 from gym_madras import MadrasEnv
-from utils.display_utils import *
-from sample_DDPG.pid_control.ddpg import *
+from display_utils import *
+from ddpg import *
 
 
 np.random.seed(1337)
@@ -23,7 +24,7 @@ gc.enable()
 figure = plt.figure()
 madras = Madras()
 
-with open("./sample_DDPG/pid_control/configurations.yml", "r") as ymlfile:
+with open("configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 # config parameters are printed in main
@@ -72,14 +73,16 @@ def playGame(f_diagnostics, train_indicator, port=3101):
     max_distance = 0.
     best_reward = cfg['agent']['start_reward']
     running_avg_reward = 0.
+    weights_location = cfg['configs']['save_location'] + str(port) + "/"
     episode_printer = StructuredPrinter(mode="episode")
     step_printer = StructuredPrinter(mode="step")
     # Set up a Torcs environment
     print(("TORCS has been asked to use port: ", port))
     env = MadrasEnv(vision=False, throttle=True, gear_change=False,
-                    pid_assist=True, port=port)
+                    port=port, pid_assist=True)
 
-    agent = DDPG(env.env_name, env.state_dim, env.action_dim)
+    agent = DDPG(env.env_name, env.state_dim, env.action_dim, weights_location,
+                 cfg['agent']['reward_threshold'], cfg['agent']['thresh_coin_toss'])
 
     s_t = env.reset()
     print("\n\n-----------------Experiment Begins-----------------------\n\n")
@@ -144,7 +147,6 @@ def playGame(f_diagnostics, train_indicator, port=3101):
                 if not dmg == env.ob.damage:
                     CRASH_COUNTER = CRASH_COUNTER + 1
                 dmg = env.ob.damage
-
                 step_printer.data["Desired_Trackpos"] = d_t[0]
                 step_printer.data["Desired_Velocity"] = d_t[1]
                 step_printer.data["Reward"] = r_t
@@ -173,7 +175,7 @@ def playGame(f_diagnostics, train_indicator, port=3101):
             if best_reward < total_reward:
                 if(best_reward < total_reward):
                     best_reward = total_reward
-                agent.saveNetwork()
+                agent.saveNetwork(port)
 
         running_avg_reward = running_average(running_avg_reward,
                                              i + 1, total_reward)

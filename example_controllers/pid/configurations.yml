@@ -18,4 +18,3 @@ configs:
   configFile: "~/.torcs/config/raceman/quickrace.xml"
   fig_save_dir: "./figures_heatmaps"
   is_training: 1
-  track_len: 7014.68

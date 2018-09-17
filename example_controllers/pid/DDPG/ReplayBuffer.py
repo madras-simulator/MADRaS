@@ -1,6 +1,6 @@
 """Prioritized experience replay buffer."""
 from queue import PriorityQueue
-from utils.madras_datatypes import Madras
+from madras_datatypes import Madras
 import random
 
 madras = Madras()
