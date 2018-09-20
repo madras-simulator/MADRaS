@@ -59,6 +59,19 @@ _Tested on ubuntu-16.04_
 git clone https://github.com/madras-simulator/MADRaS
 sudo -H pip3 install -r requirements.txt
 ```
+
+# Examples
+The examples are currently located in the [example_controllers](https://github.com/madras-simulator/MADRaS/tree/master/example_controllers) folder. 
+### Behavior Reflex
+```terminal
+foo@bar~$ python3 playGame_DDPG 3001 #for single agent training
+foo@bar~$ python3 multi_ddpg #for multi agent training
+```
+### PID
+```terminal
+foo@bar~$ python3 playGame_DDPG_pid 3001 #for single agent training
+foo@bar~$ python3 multi_ddpg #for multi agent training
+```
 ## Maintainers
  - [Sohan Rudra](https://github.com/rudrasohan)
  - [Anirban Santara](https://github.com/Santara)
