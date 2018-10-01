@@ -3,16 +3,13 @@ Gym interface to snakeoil3_gym.py.
 
 Provides a gym interface to the traditional server-client model.
 """
-import sys
-sys.path.append('../../utils/')
 import os
-import math
 import collections as col
 from gym import spaces
 import numpy as np
 import copy
-import snakeoil3_gym as snakeoil3
-from madras_datatypes import Madras
+import utils.snakeoil3_gym as snakeoil3
+from utils.madras_datatypes import Madras
 
 madras = Madras()
 

@@ -11,16 +11,13 @@ The following enhancements were made for Multi-agent synchronization using excep
 - Restart the episode for all the agents when any one of the learning agents terminates its episode
 
 """
-import sys
-sys.path.append('../../utils/')
-sys.path.append('../../controllers')
+
 import math
-import yaml
 from copy import deepcopy
 import numpy as np
-import snakeoil3_gym as snakeoil3
-from gym_torcs import TorcsEnv
-from pid import PID
+import utils.snakeoil3_gym as snakeoil3
+from utils.gym_torcs import TorcsEnv
+from controllers.pid import PID
 
 
 
