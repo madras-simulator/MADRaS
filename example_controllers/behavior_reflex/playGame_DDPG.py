@@ -1,9 +1,7 @@
 import sys
-sys.path.append('../../utils/') 
-from gym_torcs import TorcsEnv
-sys.path.append('./DDPG/') 
+from utils.gym_torcs import TorcsEnv
 import numpy as np
-import snakeoil3_gym as snakeoil3
+import utils.snakeoil3_gym as snakeoil3
 import collections as col
 import random
 import argparse
@@ -12,8 +10,8 @@ import timeit
 import math
 import sys
 import os
-from configurations import *
-from ddpg import *
+from example_controllers.behavior_reflex.configurations import *
+from example_controllers.behavior_reflex.DDPG.ddpg import *
 
 import gc
 gc.enable()

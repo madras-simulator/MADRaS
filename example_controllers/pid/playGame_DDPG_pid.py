@@ -4,8 +4,6 @@ DDPG Training.
 PID Control = True
 """
 import sys
-sys.path.append("../../utils/")
-sys.path.append("./DDPG/")
 import os
 import gc
 import yaml
@@ -13,10 +11,10 @@ from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from madras_datatypes import Madras
-from gym_madras import MadrasEnv
-from display_utils import *
-from ddpg import *
+from utils.madras_datatypes import Madras
+from utils.gym_madras import MadrasEnv
+from utils.display_utils import *
+from example_controllers.pid.DDPG.ddpg import *
 
 
 np.random.seed(1337)
@@ -24,7 +22,7 @@ gc.enable()
 figure = plt.figure()
 madras = Madras()
 
-with open("configurations.yml", "r") as ymlfile:
+with open("example_controllers/pid/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 # config parameters are printed in main

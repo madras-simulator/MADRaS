@@ -5,11 +5,11 @@ import numpy as np
 from copy import deepcopy
 import tensorflow as tf
 
-from OU import OU
-from critic_network import CriticNetwork
-from actor_network import ActorNetwork
-from ReplayBuffer import ReplayBuffer
-from display_utils import *
+from example_controllers.pid.DDPG.OU import OU
+from example_controllers.pid.DDPG.critic_network import CriticNetwork
+from example_controllers.pid.DDPG.actor_network import ActorNetwork
+from example_controllers.pid.DDPG.ReplayBuffer import ReplayBuffer
+from utils.display_utils import *
 
 # Hyper Parameters:
 

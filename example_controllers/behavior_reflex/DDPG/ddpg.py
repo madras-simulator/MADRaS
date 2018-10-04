@@ -8,11 +8,11 @@
 import gym
 import tensorflow as tf
 import numpy as np
-from OU import OU
+from example_controllers.behavior_reflex.DDPG.OU import OU
 import math, random
-from critic_network import CriticNetwork 
-from actor_network import ActorNetwork
-from ReplayBuffer import ReplayBuffer
+from example_controllers.behavior_reflex.DDPG.critic_network import CriticNetwork 
+from example_controllers.behavior_reflex.DDPG.actor_network import ActorNetwork
+from example_controllers.behavior_reflex.DDPG.ReplayBuffer import ReplayBuffer
 #from configurations import save_location
 
 

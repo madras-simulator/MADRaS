@@ -2,7 +2,7 @@ import threading
 import multiprocessing
 import numpy as np
 import tensorflow as tf
-import playGame_DDPG
+import example_controllers.behavior_reflex.playGame_DDPG as playGame_DDPG 
 import os
 from random import choice
 from time import sleep
@@ -10,7 +10,7 @@ from time import time
 #import pymp
 
 with tf.device("/cpu:0"): 
-        num_workers = 6 #multiprocessing.cpu_count() #use this when you want to use all the cpus
+        num_workers = 3 #multiprocessing.cpu_count() #use this when you want to use all the cpus
         print("numb of workers is" + str(num_workers))
 
 with tf.Session() as sess:
