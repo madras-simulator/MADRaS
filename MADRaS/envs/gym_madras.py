@@ -13,15 +13,16 @@ The following enhancements were made for Multi-agent synchronization using excep
 """
 
 import math
+import gym
 from copy import deepcopy
 import numpy as np
-import utils.snakeoil3_gym as snakeoil3
-from utils.gym_torcs import TorcsEnv
-from controllers.pid import PID
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.gym_torcs import TorcsEnv
+from MADRaS.controllers.pid import PID
 
 
 
-class MadrasEnv(TorcsEnv):
+class MadrasEnv(TorcsEnv, gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=3001, pid_assist=True,
@@ -74,13 +75,8 @@ class MadrasEnv(TorcsEnv):
 
         else:
             try:
-                if 'termination_cause' in list(prev_step_info.keys()) and\
-                        prev_step_info['termination_cause'] == 'hardReset':
-                    self.ob, self.client =\
-                        TorcsEnv.reset(self, client=self.client, relaunch=True)
-                else:
-                    self.ob, self.client =\
-                        TorcsEnv.reset(self, client=self.client, relaunch=True)
+                self.ob, self.client =\
+                    TorcsEnv.reset(self, client=self.client, relaunch=True)
 
             except Exception as e:
                 self.ob = None
