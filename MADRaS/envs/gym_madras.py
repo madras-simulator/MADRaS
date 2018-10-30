@@ -115,7 +115,15 @@ class MadrasEnv(TorcsEnv,gym.Env):
 
         else:
             try:
-		self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+		        self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+                command = None
+                if self.visualise:
+                    command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
+                else:
+                    command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
+
+                self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+                time.sleep(0.5)
             except Exception as e:
                 self.ob = None
                 while self.ob is None:
