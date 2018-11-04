@@ -4,7 +4,7 @@
 # Description
 MADRaS is a Multi-Agent Autonomous Driving Simulator built on top of TORCS. The simulator can be used to test autonomous vehicle algorithms both heuristic and learning based on an inherently multi agent setting.
 
-For further information regarding running and installation checkout our [Wiki](https://github.com/madras-simulator/MADRaS/wiki)
+For further information regarding running and installation please checkout our [Wiki](https://github.com/madras-simulator/MADRaS/wiki)
  
 ## Maintainers
  - [Sohan Rudra](https://github.com/rudrasohan)
