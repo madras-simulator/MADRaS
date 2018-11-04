@@ -4,7 +4,52 @@
 # Description
 MADRaS is a Multi-Agent Autonomous Driving Simulator built on top of TORCS. The simulator can be used to test autonomous vehicle algorithms both heuristic and learning based on an inherently multi agent setting.
 
-For further information regarding running and installation please checkout our [Wiki](https://github.com/madras-simulator/MADRaS/wiki)
+## Installation
+### Installation prerequisities 
+- TORCS
+```shell
+git clone https://github.com/madras-simulator/TORCS.git
+```
+- [plib](http://plib.sourceforge.net/)
+- Install Dependencies
+``` shell
+
+sudo apt-get install libalut-dev 
+sudo apt-get install libvorbis-dev 
+sudo apt-get install libxrandr2 libxrandr-dev 
+sudo apt-get install zlib1g-dev 
+sudo apt-get install libpng-dev 
+sudo apt-get install libplib-dev libplib1 
+sudo apt-get install python-tk
+sudo apt-get install xautomation
+```
+- Installling plib (follow instructions on the plib page)
+- Installing TORCS
+``` shell 
+cd TORCS/
+./configure --prefix=$HOME/usr/local
+make && make install
+make datainstall
+export PATH=$HOME/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/usr/local/lib:$LD_LIBRARY_PATH
+```
+- test if torcs is running by typing `torcs` in a new terminal window
+- test if scr client is installed or not.
+  - open TORCS, navigate to configure race (race->quickrace->configure race -> select drivers) 
+  - check the Not-Selected list for `scr-serverx` where x will range in [1,9]
+
+_Tested on ubuntu-16.04 & ubuntu-18.04_
+
+### Installation MADRaS
+
+``` shell
+# if req an env can also be created
+git clone https://github.com/madras-simulator/MADRaS
+cd MADRaS/
+pip3 install -e .
+```
+
+For further information regarding the simulator please checkout our [Wiki](https://github.com/madras-simulator/MADRaS/wiki)
  
 ## Maintainers
  - [Sohan Rudra](https://github.com/rudrasohan)
