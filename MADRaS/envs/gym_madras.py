@@ -81,8 +81,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
         rank = MPI.COMM_WORLD.Get_rank()
 
         
-
-        if self.visualise:
+        if rank == 0 and self.visualise:
             command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
         else:
             command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
@@ -101,7 +100,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
             while self.ob is None:
                 try:
                     self.client = snakeoil3.Client(p=self.port,
-                                                   vision=self.vision)
+                                                   vision=self.vision,visualise=self.visualise)
                     # Open new UDP in vtorcs
                     self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
                     self.client.get_servers_input(step=0)
@@ -115,15 +114,15 @@ class MadrasEnv(TorcsEnv,gym.Env):
 
         else:
             try:
-		        self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
-                command = None
-                if self.visualise:
-                    command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
-                else:
-                    command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
+                self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=False)
+                #command = None
+                #if self.visualise:
+                #    command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
+                #else:
+                #    command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
 
-                self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
-                time.sleep(0.5)
+                #self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+                #time.sleep(0.5)
             except Exception as e:
                 self.ob = None
                 while self.ob is None:

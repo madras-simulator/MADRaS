@@ -156,7 +156,8 @@ class TorcsEnv:
 
         if client.R.d['meta'] is True: # Send a reset signal
             self.initial_run = False
-            client.respond_to_server()
+            #client.respond_to_server()
+            self.reset(client)
 
         self.time_step += 1
 
@@ -178,7 +179,7 @@ class TorcsEnv:
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
-        client = snakeoil3.Client(p=port, vision=self.vision)  # Open new UDP in vtorcs
+        client = snakeoil3.Client(p=port, vision=self.vision,visualise=self.visualise)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
         # client = self.client

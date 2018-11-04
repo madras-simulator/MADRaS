@@ -56,7 +56,7 @@ import sys
 import getopt
 import os
 import time
-
+import subprocess
 
 PI = 3.14159265359
 
@@ -139,10 +139,11 @@ class Client(object):
     """The class implementation of the server client model."""
 
     def __init__(self, H=None, p=None, i=None,
-                 e=None, t=None, s=None, d=None, vision=False):
+                 e=None, t=None, s=None, d=None, vision=False,visualise=True):
         """Init method for class Client."""
         self.vision = vision
         self.host = 'localhost'
+        self.visualise=visualise
         self.port = 3001
         self.sid = 'SCR'
         self.maxEpisodes = 1  # "Maximum number of episodes to perform"
@@ -179,7 +180,7 @@ class Client(object):
         # == Initialize Connection To Server ==
         self.so.settimeout(1)
 
-        n_fail = 100
+        n_fail = 50
         while True:
             """This string establishes track sensor angles!
             You can customize them.
@@ -213,8 +214,20 @@ class Client(object):
                     os.system(u'torcs -nofuel -nodamage -nolaptime -vision &')
                     time.sleep(1.0)
                     """
-                    os.system('sh scripts/autostart.sh')
-                    n_fail = 100
+                    #os.system('sh scripts/autostart.sh')
+                    command = None
+                    rank = MPI.COMM_WORLD.Get_rank()
+
+                    if rank == 0 and self.visualise:
+                        command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
+                    else:
+                        command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
+                    if self.vision is True:
+                        command += ' -vision'
+                    self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+                    time.sleep(0.5)
+                    
+                    n_fail = 50
                 n_fail -= 1
 
             identify = '***identified***'
