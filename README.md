@@ -63,7 +63,6 @@ For further information regarding the simulator please checkout our [Wiki](https
  - [Sohan Rudra](https://github.com/rudrasohan)
  - [Meha Kaushik](https://github.com/MehaKaushik)
  - [Buridi Aditya](https://github.com/buridiaditya)
- - [Srijan Bansal](https://github.com/Srijanb97)
  
  ### Project Manager:
  - [Anirban Santara](https://github.com/Santara)
