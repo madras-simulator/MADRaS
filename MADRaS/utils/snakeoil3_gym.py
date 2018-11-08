@@ -219,9 +219,9 @@ class Client(object):
                     rank = MPI.COMM_WORLD.Get_rank()
 
                     if rank == 0 and self.visualise:
-                        command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
+                        command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(self.port)
                     else:
-                        command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
+                        command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
                     if self.vision is True:
                         command += ' -vision'
                     self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
@@ -232,7 +232,10 @@ class Client(object):
 
             identify = '***identified***'
             if identify in sockdata:
+                data = sockdata.split(':')
+                self.serverPID = int(data[1].rstrip('\x00'))
                 print("Client connected on %d.............." % self.port)
+                print("Server PID is %d.............." % self.serverPID)
                 break
 
     def parse_the_command_line(self):
