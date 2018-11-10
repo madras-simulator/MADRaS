@@ -30,14 +30,15 @@ class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=True):
+                 CLIENT_MAX_STEPS=np.inf,visualise=False):
         """Init Method."""
+        self.torcs_proc = None
         self.pid_assist = pid_assist
         if self.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
             self.action_dim = 3  # Accel, Steer, Brake
-        TorcsEnv.__init__(self, vision=False, throttle=True, gear_change=False)
+        TorcsEnv.__init__(self, vision=False, throttle=True, gear_change=False,visualise=visualise)
         self.state_dim = 29  # No. of sensors input
         self.env_name = 'Madras_Env'
         self.port = port
@@ -59,7 +60,6 @@ class MadrasEnv(TorcsEnv,gym.Env):
         self.prev_dist = 0
         self.ob = None
         self.track_len = 7014.6
-        self.torcs_proc = None
         self.start_torcs_process()
         
     def get_free_udp_port(self):
@@ -87,12 +87,11 @@ class MadrasEnv(TorcsEnv,gym.Env):
             command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
         if self.vision is True:
             command += ' -vision'
-            
+
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
-        time.sleep(0.5)
+        time.sleep(1)
         #if self.visualise:
         #    os.system('sh autostart.sh {}'.format(window_title))
-        time.sleep(0.5)
 
    
     def reset(self, prev_step_info=None):
@@ -115,19 +114,20 @@ class MadrasEnv(TorcsEnv,gym.Env):
 
         else:
             try:
-                self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=False)
-                #command = None
-                #if self.visualise:
+                self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+                # command = None
+                # if self.visualise:
                 #    command = 'export TORCS_PORT={} && vglrun torcs '.format(self.port)
-                #else:
+                # else:
                 #    command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml'.format(self.port)
 
-                #self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
-                #time.sleep(0.5)
+                # self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+                # time.sleep(0.5)
             except Exception as e:
                 self.ob = None
                 while self.ob is None:
                     try:
+                        print("Stuck here")
                         self.client = snakeoil3.Client(p=self.port,
                                                        vision=self.vision)
                         # Open new UDP in vtorcs
@@ -200,6 +200,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
             if self.distance_traversed >= self.track_len:
                 done = True
             if done:
+                # self.reset()
                 break
 
         s_t1 = np.hstack((self.ob.angle, self.ob.track, self.ob.trackPos,

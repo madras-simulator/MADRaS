@@ -4,6 +4,10 @@ Gym interface to snakeoil3_gym.py.
 Provides a gym interface to the traditional server-client model.
 """
 import os
+import subprocess
+from mpi4py import MPI
+
+import signal
 import collections as col
 from gym import spaces
 import numpy as np
@@ -20,16 +24,15 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False):
         self.vision = vision
         self.throttle = throttle
         self.gear_change = gear_change
         self.obs_dim = obs_dim
         self.act_dim = act_dim
-
+        self.visualise = visualise
         self.initial_run = True
         self.time_step = 0
-
         self.currState = None 
 
         if throttle is False:                           # Throttle is generally True
@@ -156,17 +159,16 @@ class TorcsEnv:
 
         if client.R.d['meta'] is True: # Send a reset signal
             self.initial_run = False
-            #client.respond_to_server()
-            self.reset(client)
+            print('Terminating PID {}'.format(client.serverPID))
+            client.respond_to_server()
+            #self.reset(client)
 
         self.time_step += 1
 
         return self.observation, reward, client.R.d['meta'], {}
 
 
-    def reset(self, client, relaunch=False):
-
-        port = client.port
+    def reset(self, client, relaunch=True):        
         self.time_step = 0
 
         if self.initial_reset is not True:
@@ -175,11 +177,11 @@ class TorcsEnv:
 
             ## TENTATIVE. Restarting TORCS every episode suffers the memory leak bug!
             if relaunch is True:
-                self.reset_torcs()
+                self.reset_torcs(client)
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
-        client = snakeoil3.Client(p=port, vision=self.vision,visualise=self.visualise)  # Open new UDP in vtorcs
+        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
         # client = self.client
@@ -196,15 +198,32 @@ class TorcsEnv:
         self.initial_reset = False
         return self.get_obs(), client
 
-    def end(self):
-        os.system('pkill torcs')
+    def end(self,client):
+        command = 'kill {}'.format(client.serverPID)
+        
+        os.system(command)
 
     def get_obs(self):
         return self.observation
 
-    def reset_torcs(self):
-        print("relaunch torcs")
-        os.system('pkill torcs')
+    def reset_torcs(self,client):
+        print("relaunch torcs in gym_torcs on port{}".format(client.port))
+        
+        command = 'kill {}'.format(client.serverPID)
+        os.system(command)
+        
+        command = None
+        rank = MPI.COMM_WORLD.Get_rank()        
+        if rank == 0 and self.visualise:
+            command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(client.port)
+        else:
+            command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+        if self.vision is True:
+            command += ' -vision'
+
+        self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+        #self.torcs_proc = subprocess.Popen([command], shell=True)
+        time.sleep(10)
 
     def agent_to_torcs(self, u):
         torcs_action = {'steer': u[0]}

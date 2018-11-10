@@ -141,6 +141,7 @@ class Client(object):
     def __init__(self, H=None, p=None, i=None,
                  e=None, t=None, s=None, d=None, vision=False,visualise=True):
         """Init method for class Client."""
+        self.serverPID = None
         self.vision = vision
         self.host = 'localhost'
         self.visualise=visualise
@@ -169,9 +170,11 @@ class Client(object):
         self.S = ServerState()
         self.R = DriverAction()
         self.setup_connection()
+        
 
     def setup_connection(self):
         """Set Up UDP Socket."""
+        print("Trying to set connection")
         try:
             self.so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except socket.error as emsg:
@@ -180,7 +183,7 @@ class Client(object):
         # == Initialize Connection To Server ==
         self.so.settimeout(1)
 
-        n_fail = 50
+        n_fail = 15
         while True:
             """This string establishes track sensor angles!
             You can customize them.
@@ -193,6 +196,7 @@ class Client(object):
             initmsg = '%s(init %s)' % (self.sid, a)
 
             try:
+                print('Trying to establish connection')
                 self.so.sendto(initmsg.encode(), (self.host, self.port))
             except socket.error as emsg:
                 sys.exit(-1)
@@ -204,17 +208,20 @@ class Client(object):
                 print("Waiting for server on %d............" % self.port)
                 print("Count Down : " + str(n_fail))
                 if n_fail < 0:
-                    print("relaunch torcs")
-                    os.system('pkill torcs')
+                    print("relaunch torcs in snakeoil")
+                    if self.serverPID is not None:
+                        command = 'kill {}'.format(self.serverPID)
+                        os.system(command)
+                        self.serverPID = None
                     time.sleep(1.0)
 
-                    """if self.vision is False:
-                    os.system(u'torcs -nofuel -nodamage -nolaptime &')
-                    else:
-                    os.system(u'torcs -nofuel -nodamage -nolaptime -vision &')
-                    time.sleep(1.0)
-                    """
-                    #os.system('sh scripts/autostart.sh')
+                    # if self.vision is False:
+                    #     os.system(u'torcs -nofuel -nodamage -nolaptime &')
+                    # else:
+                    #     os.system(u'torcs -nofuel -nodamage -nolaptime -vision &')
+                    # time.sleep(1.0)
+                    
+                    # os.system('sh scripts/autostart.sh')
                     command = None
                     rank = MPI.COMM_WORLD.Get_rank()
 
