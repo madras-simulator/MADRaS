@@ -30,7 +30,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=False):
+                 CLIENT_MAX_STEPS=np.inf,visualise=True):
         """Init Method."""
         self.torcs_proc = None
         self.pid_assist = pid_assist

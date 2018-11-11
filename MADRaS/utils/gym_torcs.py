@@ -223,7 +223,7 @@ class TorcsEnv:
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         #self.torcs_proc = subprocess.Popen([command], shell=True)
-        time.sleep(10)
+        time.sleep(1)
 
     def agent_to_torcs(self, u):
         torcs_action = {'steer': u[0]}
