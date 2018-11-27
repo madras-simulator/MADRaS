@@ -139,12 +139,13 @@ class Client(object):
     """The class implementation of the server client model."""
 
     def __init__(self, H=None, p=None, i=None,
-                 e=None, t=None, s=None, d=None, vision=False,visualise=True):
+                 e=None, t=None, s=None, d=None, vision=False,visualise=True,no_of_visualisations=1):
         """Init method for class Client."""
         self.serverPID = None
         self.vision = vision
         self.host = 'localhost'
         self.visualise=visualise
+        self.no_of_visualisations = no_of_visualisations
         self.port = 3001
         self.sid = 'SCR'
         self.maxEpisodes = 1  # "Maximum number of episodes to perform"
@@ -225,7 +226,7 @@ class Client(object):
                     command = None
                     rank = MPI.COMM_WORLD.Get_rank()
 
-                    if rank == 0 and self.visualise:
+                    if rank < self.no_of_visualisations and self.visualise:
                         command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(self.port)
                     else:
                         command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)

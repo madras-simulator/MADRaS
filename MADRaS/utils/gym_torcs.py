@@ -6,6 +6,7 @@ Provides a gym interface to the traditional server-client model.
 import os
 import subprocess
 from mpi4py import MPI
+import time
 
 import signal
 import collections as col
@@ -24,7 +25,7 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1):
         self.vision = vision
         self.throttle = throttle
         self.gear_change = gear_change
@@ -34,7 +35,7 @@ class TorcsEnv:
         self.initial_run = True
         self.time_step = 0
         self.currState = None 
-
+        self.no_of_visualisations = no_of_visualisations
         if throttle is False:                           # Throttle is generally True
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
         else:
@@ -181,7 +182,7 @@ class TorcsEnv:
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
-        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise)  # Open new UDP in vtorcs
+        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
         # client = self.client
@@ -211,10 +212,12 @@ class TorcsEnv:
         
         command = 'kill {}'.format(client.serverPID)
         os.system(command)
-        
+       
+        time.sleep(1)
+       
         command = None
         rank = MPI.COMM_WORLD.Get_rank()        
-        if rank == 0 and self.visualise:
+        if rank < self.no_of_visualisations and self.visualise:
             command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(client.port)
         else:
             command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
