@@ -220,7 +220,7 @@ class TorcsEnv:
         if rank < self.no_of_visualisations and self.visualise:
             command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(client.port)
         else:
-            command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
         if self.vision is True:
             command += ' -vision'
 

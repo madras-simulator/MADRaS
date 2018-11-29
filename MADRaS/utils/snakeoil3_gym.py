@@ -229,7 +229,7 @@ class Client(object):
                     if rank < self.no_of_visualisations and self.visualise:
                         command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(self.port)
                     else:
-                        command = 'export TORCS_PORT={} && vglrun torcs -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
+                        command = 'export TORCS_PORT={} && vglrun torcs -t 10000000  -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
                     if self.vision is True:
                         command += ' -vision'
                     self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
