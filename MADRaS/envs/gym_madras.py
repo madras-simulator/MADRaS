@@ -13,30 +13,38 @@ The following enhancements were made for Multi-agent synchronization using excep
 """
 
 import math
-import gym
 from copy import deepcopy
 import numpy as np
 import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.utils.gym_torcs import TorcsEnv
 from MADRaS.controllers.pid import PID
+import gym
+import os
+import subprocess
+import signal
+import time
+from mpi4py import MPI
+import socket
 
-
-
-class MadrasEnv(TorcsEnv, gym.Env):
+class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
-                 gear_change=False, port=3001, pid_assist=True,
-                 CLIENT_MAX_STEPS=np.inf):
+                 gear_change=False, port=60934, pid_assist=False,
+                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1):
+        # If `visualise` is set to False torcs simulator will run in headless mode
         """Init Method."""
+        self.torcs_proc = None
         self.pid_assist = pid_assist
         if self.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
             self.action_dim = 3  # Accel, Steer, Brake
-        TorcsEnv.__init__(self, vision=False, throttle=True, gear_change=False)
+        TorcsEnv.__init__(self, vision=False, throttle=True, gear_change=False,visualise=visualise,no_of_visualisations=no_of_visualisations)
         self.state_dim = 29  # No. of sensors input
         self.env_name = 'Madras_Env'
         self.port = port
+        self.visualise = visualise
+        self.no_of_visualisations = no_of_visualisations
         self.CLIENT_MAX_STEPS = CLIENT_MAX_STEPS
         self.client_type = 0  # Snakeoil client type
         self.initial_reset = True
@@ -54,14 +62,47 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.prev_dist = 0
         self.ob = None
         self.track_len = 7014.6
+        self.start_torcs_process()
+        
+    def get_free_udp_port(self):
+        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp.bind(('', 0))
+        addr, port = udp.getsockname()
+        udp.close()
+        return port
 
+    def start_torcs_process(self):
+        if self.torcs_proc is not None:
+            os.killpg(os.getpgid(self.torcs_proc.pid), signal.SIGKILL)
+            time.sleep(0.5)
+            self.torcs_proc = None
+
+        self.port = self.get_free_udp_port()
+        window_title = str(self.port)
+        command = None
+        rank = MPI.COMM_WORLD.Get_rank()
+
+        
+        if rank < self.no_of_visualisations and self.visualise:
+            command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(self.port)
+        else:
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
+        if self.vision is True:
+            command += ' -vision'
+
+        self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+        time.sleep(1)
+        #if self.visualise:
+        #    os.system('sh autostart.sh {}'.format(window_title))
+
+   
     def reset(self, prev_step_info=None):
         """Reset Method. To be called at the end of each episode"""
         if self.initial_reset:
             while self.ob is None:
                 try:
                     self.client = snakeoil3.Client(p=self.port,
-                                                   vision=self.vision)
+                                                   vision=self.vision,visualise=self.visualise)
                     # Open new UDP in vtorcs
                     self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
                     self.client.get_servers_input(step=0)
@@ -75,13 +116,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
         else:
             try:
-                self.ob, self.client =\
-                    TorcsEnv.reset(self, client=self.client, relaunch=True)
-
+                self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
             except Exception as e:
                 self.ob = None
                 while self.ob is None:
                     try:
+                        print("Hard Reset")
+                        # self.end(self.client)
                         self.client = snakeoil3.Client(p=self.port,
                                                        vision=self.vision)
                         # Open new UDP in vtorcs
@@ -154,6 +195,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             if self.distance_traversed >= self.track_len:
                 done = True
             if done:
+                # self.reset()
                 break
 
         s_t1 = np.hstack((self.ob.angle, self.ob.track, self.ob.trackPos,
