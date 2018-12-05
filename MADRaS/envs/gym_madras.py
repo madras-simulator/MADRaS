@@ -19,6 +19,7 @@ import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.utils.gym_torcs import TorcsEnv
 from MADRaS.controllers.pid import PID
 import gym
+from gym.utils import seeding
 import os
 import subprocess
 import signal
@@ -62,7 +63,13 @@ class MadrasEnv(TorcsEnv,gym.Env):
         self.prev_dist = 0
         self.ob = None
         self.track_len = 7014.6
+        self.seed()
         self.start_torcs_process()
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
         
     def get_free_udp_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -86,7 +93,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
         if rank < self.no_of_visualisations and self.visualise:
             command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(self.port)
         else:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
+            command = 'export TORCS_PORT={} && torcs -t 1000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
         if self.vision is True:
             command += ' -vision'
 
