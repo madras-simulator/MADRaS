@@ -119,7 +119,8 @@ class TorcsEnv:
         if code==-1:
             client.R.d['meta'] = True
             print('Terminating because server stopped responding')
-            return None, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
+            return obs_pre, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
+            # return None, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
 
         # Get the current full-observation from torcs
         obs = client.S.d
@@ -161,20 +162,19 @@ class TorcsEnv:
         if client.R.d['meta'] is True: # Send a reset signal
             self.initial_run = False
             print('Terminating PID {}'.format(client.serverPID))
-            client.respond_to_server()
+            # client.respond_to_server()
             #self.reset(client)
 
         self.time_step += 1
-
         return self.observation, reward, client.R.d['meta'], {}
 
 
     def reset(self, client, relaunch=True):        
         self.time_step = 0
-
+        self.port = client.port
         if self.initial_reset is not True:
-            client.R.d['meta'] = True
-            client.respond_to_server()
+            # client.R.d['meta'] = True
+            # client.respond_to_server()
 
             ## TENTATIVE. Restarting TORCS every episode suffers the memory leak bug!
             if relaunch is True:
@@ -186,7 +186,7 @@ class TorcsEnv:
         client.MAX_STEPS = np.inf
 
         # client = self.client
-        client.get_servers_input(-1)  # Get the initial input from torcs
+        client.get_servers_input(step=0)  # Get the initial input from torcs
 
         obs = client.S.d  # Get the current full-observation from torcs
         self.observation = self.make_observation(obs)
@@ -218,9 +218,9 @@ class TorcsEnv:
         command = None
         rank = MPI.COMM_WORLD.Get_rank()        
         if rank < self.no_of_visualisations and self.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(client.port)
         else:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
         if self.vision is True:
             command += ' -vision'
 
