@@ -152,7 +152,7 @@ class Client(object):
         self.trackname = 'unknown'
         self.stage = 3  # 0=Warm-up, 1=Qualifying 2=Race, 3=unknown <Default=3>
         self.debug = False
-        self.maxSteps = 100000  # 50steps/second
+        self.maxSteps = 10000000  # 50steps/second
         # self.parse_the_command_line()
         if H:
             self.host = H
@@ -227,9 +227,9 @@ class Client(object):
                     rank = MPI.COMM_WORLD.Get_rank()
 
                     if rank < self.no_of_visualisations and self.visualise:
-                        command = 'export TORCS_PORT={} && vglrun torcs -nolaptime'.format(self.port)
+                        command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.port)
                     else:
-                        command = 'export TORCS_PORT={} && vglrun torcs -t 10000000  -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
+                        command = 'export TORCS_PORT={} && torcs -t 10000000  -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
                     if self.vision is True:
                         command += ' -vision'
                     self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
