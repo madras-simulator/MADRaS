@@ -2,17 +2,17 @@
 import sys
 import yaml
 import numpy as np
-from controllers.pid import PID
-from utils.gym_torcs import TorcsEnv
-import utils.snakeoil3_gym as snakeoil3
-from utils.madras_datatypes import Madras
+from MADRaS.controllers.pid import PID
+from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.madras_datatypes import Madras
 
 madras = Madras()
 with open("./traffic/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 
-def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
+def playTraffic(port=3101, target_vel=500.0, angle=0.0, sleep=0):
     """Traffic Play function."""
     env = TorcsEnv(vision=False, throttle=True, gear_change=False)
     ob = None
@@ -34,7 +34,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     steer = 0.0
     accel = 0.0
     brake = 0
-    print(velocity)
+    # print(velocity)
     for i in range(episode_count):
         info = {'termination_cause': 0}
         steer = 0.0
@@ -60,12 +60,12 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
                         pass
                     continue
             if (step <= sleep):
-                print("WAIT" + str(port))
+                # print("WAIT" + str(port))
                 continue
             opp = ob.opponents
             front = np.array([opp[15], opp[16], opp[17], opp[18], opp[19]])
             closest_front = np.min(front)
-            print(ob.speedX * 300)
+            # print(ob.speedX * 300)
             vel_error = velocity - ob.speedX
             angle_error = -(ob.trackPos - angle) / 10 + ob.angle
             steer_pid.update_error(angle_error)

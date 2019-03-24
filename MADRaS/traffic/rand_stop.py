@@ -4,10 +4,10 @@ import time
 import yaml
 import random
 import numpy as np
-from controllers.pid import PID
-from utils.gym_torcs import TorcsEnv
-import utils.snakeoil3_gym as snakeoil3
-from utils.madras_datatypes import Madras
+from MADRaS.controllers.pid import PID
+from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.madras_datatypes import Madras
 
 random.seed(time.time())
 madras = Madras()

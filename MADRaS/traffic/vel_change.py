@@ -37,7 +37,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     brake = 0
     A = cfg['traffic']['amplitude'] / 300.0
     T = cfg['traffic']['time_period']
-    print(velocity_i)
+    # print(velocity_i)
     for i in range(episode_count):
         info = {'termination_cause': 0}
         steer = 0.0

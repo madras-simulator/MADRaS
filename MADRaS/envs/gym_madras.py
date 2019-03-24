@@ -17,6 +17,11 @@ from copy import deepcopy
 import numpy as np
 import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.traffic.const_vel as agentConstant
+import MADRaS.traffic.rand_stop as agentStopper
+import MADRaS.traffic.vel_change as agentSinusoid
+import MADRaS.traffic.lane_switch as agentLaneChanger
+
 from MADRaS.controllers.pid import PID
 import gym
 from gym.utils import seeding
@@ -27,15 +32,19 @@ import time
 from mpi4py import MPI
 import socket
 
+from multiprocessing import Process
+
 class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1):
+                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1, traffic_type=[0,0,0]):
+        # traffic_type is a list of traffic agents.
         # If `visualise` is set to False torcs simulator will run in headless mode
         """Init Method."""
         self.torcs_proc = None
         self.pid_assist = pid_assist
+        self.traffic_type = traffic_type
         if self.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
@@ -106,6 +115,27 @@ class MadrasEnv(TorcsEnv,gym.Env):
     def reset(self, prev_step_info=None):
         """Reset Method. To be called at the end of each episode"""
         if self.initial_reset:
+           
+            self.traffic_processes = []
+
+            for i in range(len(self.traffic_type)):
+                tp = self.traffic_type[i]
+                if tp == 0: # constant velocity traffic
+                    p1 = Process(target = agentConstant.playTraffic, args=(self.port+i+1,) )
+                    self.traffic_processes.append(p1)
+                elif tp == 1: # random stopping traffic
+                    p1 = Process(target = agentStopper.playTraffic, args=(self.port+i+1,) )
+                    self.traffic_processes.append(p1)
+                elif tp == 2: # Sinusoidal traffic
+                    p1 = Process(target = agentSinusoid.playTraffic, args=(self.port+i+1,) )
+                    self.traffic_processes.append(p1)
+                elif tp == 3: # random stopping traffic
+                    p1 = Process(target = agentLaneChanger.playTraffic, args=(self.port+i+1,) )
+                    self.traffic_processes.append(p1)
+
+            for p in self.traffic_processes:
+                p.start()
+            
             while self.ob is None:
                 try:
                     self.client = snakeoil3.Client(p=self.port,
@@ -123,7 +153,30 @@ class MadrasEnv(TorcsEnv,gym.Env):
 
         else:
             try:
+                
+                self.traffic_processes = []
+
+                for i in range(len(self.traffic_type)):
+                    tp = self.traffic_type[i]
+                    if tp == 0: # constant velocity traffic
+                        p1 = Process(target = agentConstant.playTraffic, args=(self.port+i+1,) )
+                        self.traffic_processes.append(p1)
+                    elif tp == 1: # random stopping traffic
+                        p1 = Process(target = agentStopper.playTraffic, args=(self.port+i+1,) )
+                        self.traffic_processes.append(p1)
+                    elif tp == 2: # Sinusoidal traffic
+                        p1 = Process(target = agentSinusoid.playTraffic, args=(self.port+i+1,) )
+                        self.traffic_processes.append(p1)
+                    elif tp == 3: # random stopping traffic
+                        p1 = Process(target = agentLaneChanger.playTraffic, args=(self.port+i+1,) )
+                        self.traffic_processes.append(p1)
+
+                for p in self.traffic_processes:
+                    p.start() 
+                
                 self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+                
+                    
             except Exception as e:
                 self.ob = None
                 while self.ob is None:
@@ -196,10 +249,14 @@ class MadrasEnv(TorcsEnv,gym.Env):
             r_t += r  # accumulate rewards over all the time steps
 
             self.distance_traversed = self.client.S.d['distRaced']
-            r_t += (self.distance_traversed - self.prev_dist) /\
-                self.track_len
+            # if self.distance_traversed - self.prev_dist == 0:
+                # r_t -= 50
+            # r_t += (self.distance_traversed - self.prev_dist) /\
+                # self.track_len
+            # r_t = self.distance_traversed
             self.prev_dist = deepcopy(self.distance_traversed)
             if self.distance_traversed >= self.track_len:
+                # reward += 1000
                 done = True
             if done:
                 # self.reset()
