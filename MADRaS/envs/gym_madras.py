@@ -39,13 +39,15 @@ class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=False,no_of_visualisations=1, multi_agent_mode=False , traffic_type=[3,3,3]):
+                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1, multi_agent_mode=False ,random_traffic=True, traffic_type=[3,3,3]):
         # traffic_type is a list of traffic agents.
         # If `visualise` is set to False torcs simulator will run in headless mode
         """Init Method."""
         self.torcs_proc = None
         self.pid_assist = pid_assist
         self.traffic_type = traffic_type
+        if random_traffic:
+            self.traffic_type = np.random.randint(0,4,3)
         if self.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
@@ -121,7 +123,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
             self.traffic_processes = []
             
             self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
-            index = random.randint(1,len(self.ports)-1)
+            index = random.randint(2,len(self.ports)-1)
 
             self.mainport = self.ports.pop(index)
 

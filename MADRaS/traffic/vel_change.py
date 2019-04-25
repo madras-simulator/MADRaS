@@ -49,7 +49,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
             try:
                 ob, r_t, done, info = env.step(step, client, a_t, early_stop)
                 if done:
-                    break
+                    pass
             except Exception as e:
                 print("Exception caught at point A at port " + str(i) + str(e))
                 ob = None
