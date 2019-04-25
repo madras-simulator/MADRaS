@@ -30,6 +30,7 @@ import subprocess
 import signal
 import time
 from mpi4py import MPI
+import random
 import socket
 
 from multiprocessing import Process
@@ -38,7 +39,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1, multi_agent_mode=False , traffic_type=[0,0,0]):
+                 CLIENT_MAX_STEPS=np.inf,visualise=False,no_of_visualisations=1, multi_agent_mode=False , traffic_type=[3,3,3]):
         # traffic_type is a list of traffic agents.
         # If `visualise` is set to False torcs simulator will run in headless mode
         """Init Method."""
@@ -118,20 +119,25 @@ class MadrasEnv(TorcsEnv,gym.Env):
         if self.initial_reset:
            
             self.traffic_processes = []
+            
+            self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
+            index = random.randint(1,len(self.ports)-1)
+
+            self.mainport = self.ports.pop(index)
 
             for i in range(len(self.traffic_type)):
                 tp = self.traffic_type[i]
                 if tp == 0: # constant velocity traffic
-                    p1 = Process(target = agentConstant.playTraffic, args=(self.port+i+1,) )
+                    p1 = Process(target = agentConstant.playTraffic, args=(self.ports[i],) )
                     self.traffic_processes.append(p1)
                 elif tp == 1: # random stopping traffic
-                    p1 = Process(target = agentStopper.playTraffic, args=(self.port+i+1,) )
+                    p1 = Process(target = agentStopper.playTraffic, args=(self.ports[i],) )
                     self.traffic_processes.append(p1)
                 elif tp == 2: # Sinusoidal traffic
-                    p1 = Process(target = agentSinusoid.playTraffic, args=(self.port+i+1,) )
+                    p1 = Process(target = agentSinusoid.playTraffic, args=(self.ports[i],) )
                     self.traffic_processes.append(p1)
-                elif tp == 3: # random stopping traffic
-                    p1 = Process(target = agentLaneChanger.playTraffic, args=(self.port+i+1,) )
+                elif tp == 3: # Lane changing
+                    p1 = Process(target = agentLaneChanger.playTraffic, args=(self.ports[i],) )
                     self.traffic_processes.append(p1)
 
             for p in self.traffic_processes:
@@ -139,7 +145,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
             
             while self.ob is None:
                 try:
-                    self.client = snakeoil3.Client(p=self.port,
+                    self.client = snakeoil3.Client(p=self.mainport,
                                                    vision=self.vision,visualise=self.visualise)
                     # Open new UDP in vtorcs
                     self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
@@ -154,28 +160,36 @@ class MadrasEnv(TorcsEnv,gym.Env):
 
         else:
             try:
-                
-                self.traffic_processes = []
+
+                for p in self.traffic_processes:
+                    p.terminate()
+
+                self.traffic_processes = []                                
+                self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
+                index = random.randint(1,len(self.ports)-1)
+
+                self.mainport = self.ports.pop(index)
+
 
                 for i in range(len(self.traffic_type)):
                     tp = self.traffic_type[i]
                     if tp == 0: # constant velocity traffic
-                        p1 = Process(target = agentConstant.playTraffic, args=(self.port+i+1,) )
+                        p1 = Process(target = agentConstant.playTraffic, args=(self.ports[i],) )
                         self.traffic_processes.append(p1)
                     elif tp == 1: # random stopping traffic
-                        p1 = Process(target = agentStopper.playTraffic, args=(self.port+i+1,) )
+                        p1 = Process(target = agentStopper.playTraffic, args=(self.ports[i],) )
                         self.traffic_processes.append(p1)
                     elif tp == 2: # Sinusoidal traffic
-                        p1 = Process(target = agentSinusoid.playTraffic, args=(self.port+i+1,) )
+                        p1 = Process(target = agentSinusoid.playTraffic, args=(self.ports[i],) )
                         self.traffic_processes.append(p1)
                     elif tp == 3: # random stopping traffic
-                        p1 = Process(target = agentLaneChanger.playTraffic, args=(self.port+i+1,) )
+                        p1 = Process(target = agentLaneChanger.playTraffic, args=(self.ports[i],) )
                         self.traffic_processes.append(p1)
 
                 for p in self.traffic_processes:
                     p.start() 
                 
-                self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+                self.ob, self.client = TorcsEnv.reset(self, client=self.client, serverport=self.port, agentport=self.mainport, relaunch=True)
                 
                     
             except Exception as e:
@@ -184,7 +198,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
                     try:
                         print("Hard Reset")
                         # self.end(self.client)
-                        self.client = snakeoil3.Client(p=self.port,
+                        self.client = snakeoil3.Client(p=self.mainport,
                                                        vision=self.vision)
                         # Open new UDP in vtorcs
                         self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
@@ -230,7 +244,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
                 self.ob = None
                 while self.ob is None:
                     try:
-                        self.client = snakeoil3.Client(p=self.port,
+                        self.client = snakeoil3.Client(p=self.mainport,
                                                        vision=self.vision)
                         # Open new UDP in vtorcs
                         self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
@@ -250,12 +264,18 @@ class MadrasEnv(TorcsEnv,gym.Env):
             r_t += r  # accumulate rewards over all the time steps
 
             self.distance_traversed = self.client.S.d['distRaced']
-            # if self.distance_traversed - self.prev_dist == 0:
-                # r_t -= 50
+            if self.distance_traversed - self.prev_dist == 0:
+                r_t -= 50
             # r_t += (self.distance_traversed - self.prev_dist) /\
                 # self.track_len
             # r_t = self.distance_traversed
+            # r_t += (4-self.client.S.d['racePos'])
             self.prev_dist = deepcopy(self.distance_traversed)
+            if self.client.S.d['racePos'] == 1:
+                print("Reached Position 1 - Resetting")
+                done = True
+                r_t += 10000
+            
             if self.distance_traversed >= self.track_len:
                 # reward += 1000
                 done = True

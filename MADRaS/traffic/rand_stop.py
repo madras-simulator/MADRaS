@@ -11,7 +11,7 @@ from MADRaS.utils.madras_datatypes import Madras
 
 random.seed(time.time())
 madras = Madras()
-with open("./traffic/configurations.yml", "r") as ymlfile:
+with open("./MADRaS/MADRaS/traffic/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 

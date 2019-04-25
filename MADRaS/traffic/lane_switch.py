@@ -10,13 +10,13 @@ import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.utils.madras_datatypes import Madras
 
 madras = Madras()
-with open("./traffic/configurations.yml", "r") as ymlfile:
+with open("./MADRaS/MADRaS/traffic/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 random.seed(time.time())
 
 
-def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
+def playTraffic(port=3101, target_vel=80.0, angle=0.0, sleep=0):
     """Traffic Play function."""
     env = TorcsEnv(vision=False, throttle=True, gear_change=False)
     ob = None
@@ -50,7 +50,8 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
             try:
                 ob, r_t, done, info = env.step(step, client, a_t, early_stop)
                 if done:
-                    break
+                    # break
+                    pass
             except Exception as e:
                 print("Exception caught at port " + str(i) + str(e))
                 ob = None

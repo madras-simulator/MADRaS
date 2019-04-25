@@ -3,13 +3,13 @@ import sys
 import math
 import yaml
 import numpy as np
-from controllers.pid import PID
-from utils.gym_torcs import TorcsEnv
-import utils.snakeoil3_gym as snakeoil3
-from utils.madras_datatypes import Madras
+from MADRaS.controllers.pid import PID
+from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.madras_datatypes import Madras
 
 madras = Madras()
-with open("./traffic/configurations.yml", "r") as ymlfile:
+with open("./MADRaS/MADRaS/traffic/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 
