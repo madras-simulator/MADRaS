@@ -60,6 +60,7 @@ class TorcsEnv:
 
 
     def step(self, step, client, u, early_stop=1):
+        reward = 0
         this_action = self.agent_to_torcs(u)
 
         # Apply Action
