@@ -16,7 +16,7 @@ with open("./MADRaS/MADRaS/traffic/configurations.yml", "r") as ymlfile:
 random.seed(time.time())
 
 
-def playTraffic(port=3101, target_vel=80.0, angle=0.0, sleep=0):
+def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     """Traffic Play function."""
     env = TorcsEnv(vision=False, throttle=True, gear_change=False)
     ob = None

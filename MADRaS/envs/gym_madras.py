@@ -39,7 +39,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
     """Definition of the Gym Madras Env."""
     def __init__(self, vision=False, throttle=True,
                  gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1, multi_agent_mode=False ,random_traffic=True, traffic_type=[3,3,3]):
+                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1, multi_agent_mode=False ,random_traffic=True, traffic_type=[]):
         # traffic_type is a list of traffic agents.
         # If `visualise` is set to False torcs simulator will run in headless mode
         """Init Method."""
@@ -172,8 +172,10 @@ class MadrasEnv(TorcsEnv,gym.Env):
 
                 self.traffic_processes = []                                
                 self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
-                index = random.randint(1,len(self.ports)-1)
-                self.oldpos = index+1
+                index = 0
+                if len(self.traffic_type) != 0:                
+                    index = random.randint(1,len(self.ports)-1)
+                self.oldpos = index+1                
                 self.mainport = self.ports.pop(index)
 
 
@@ -286,7 +288,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
                 print("Overtakeen by traffic")
                 r_t -= 10000
 
-            if self.client.S.d['racePos'] == 1:
+            if self.client.S.d['racePos'] == 1 and (len(self.traffic_type) != 0):
                 print("Reached Position 1 - Resetting")
                 done = True
                 r_t += 50000
