@@ -47,7 +47,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
         self.pid_assist = pid_assist
         self.traffic_type = traffic_type
         if random_traffic:
-            self.traffic_type = np.random.randint(0,4,3)
+            self.traffic_type = np.random.randint(0,4,len(traffic_type))
         if self.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
@@ -123,7 +123,11 @@ class MadrasEnv(TorcsEnv,gym.Env):
             self.traffic_processes = []
             
             self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
-            index = random.randint(2,len(self.ports)-1)
+            
+            index = 0
+            if len(self.traffic_type) != 0:                
+                index = random.randint(1,len(self.ports)-1)
+            self.oldpos = index+1
 
             self.mainport = self.ports.pop(index)
 
@@ -169,7 +173,7 @@ class MadrasEnv(TorcsEnv,gym.Env):
                 self.traffic_processes = []                                
                 self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
                 index = random.randint(1,len(self.ports)-1)
-
+                self.oldpos = index+1
                 self.mainport = self.ports.pop(index)
 
 
@@ -273,11 +277,23 @@ class MadrasEnv(TorcsEnv,gym.Env):
             # r_t = self.distance_traversed
             # r_t += (4-self.client.S.d['racePos'])
             self.prev_dist = deepcopy(self.distance_traversed)
+            
+            if self.client.S.d['racePos'] < self.oldpos:
+                print("Overtake done")
+                r_t += 10000
+
+            if self.client.S.d['racePos'] > self.oldpos:
+                print("Overtakeen by traffic")
+                r_t -= 10000
+
             if self.client.S.d['racePos'] == 1:
                 print("Reached Position 1 - Resetting")
                 done = True
-                r_t += 10000
-            
+                r_t += 50000
+
+
+            self.oldpos = self.client.S.d['racePos']
+
             if self.distance_traversed >= self.track_len:
                 # reward += 1000
                 done = True
