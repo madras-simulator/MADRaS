@@ -147,6 +147,11 @@ class MadrasEnv(TorcsEnv,gym.Env):
                         self.ob.speedX, self.ob.speedY, self.ob.speedZ,
                         self.ob.wheelSpinVel / 100.0, self.ob.rpm))
 
+        self.prev_angle = 0.0
+        self.prev_dist = 0.0
+        self.prev_lane = 0.0
+        self.accel_PID.reset_pid()
+        self.steer_PID.reset_pid()
         return s_t
 
     def step(self, desire):
