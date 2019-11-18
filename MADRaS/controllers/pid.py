@@ -25,6 +25,9 @@ class PID(object):
         return "<PID_onject P: %s I: %s D: %s>"\
             % (self.K[0], self.K[1], self.K[2])
 
+    def reset_pid(self):
+        self.error = np.array([0.0, 0.0, 0.0])
+
     def update_error(self, e):
         """Update Step."""
         self.error[2] = e - self.error[0]

@@ -3,10 +3,16 @@
 
 # Description
 MADRaS is a Multi-Agent Autonomous Driving Simulator built on top of TORCS. The simulator can be used to test autonomous vehicle algorithms both heuristic and learning based on an inherently multi agent setting.
-# Installation prerequisities 
 
-- Download [torcs-1.3.6](https://sourceforge.net/projects/torcs/files/all-in-one/1.3.6/torcs-1.3.6.tar.bz2/download), [plib-1.8.5](http://plib.sourceforge.net/download.html)
+Note please : Master branch is the development branch, the most stable version of the code is in Version1 branch. We request all users to checkout Version1 branch for stability.
 
+## Installation
+### Installation prerequisities 
+- TORCS
+```shell
+git clone https://github.com/madras-simulator/TORCS.git
+```
+- [plib](http://plib.sourceforge.net/)
 - Install Dependencies
 ``` shell
 
@@ -21,45 +27,48 @@ sudo apt-get install xautomation
 ```
 - Installling plib (follow instructions on the plib page)
 - Installing TORCS
-``` shell
-
-tar xvjf torcs-1.3.6.tar.bz2  
-cd torcs-1.3.6/
-./configure
-make
-sudo make install
-sudo make datainstall
+``` shell 
+cd TORCS/
+./configure --prefix=$HOME/usr/local
+make && make install
+make datainstall
+export PATH=$HOME/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/usr/local/lib:$LD_LIBRARY_PATH
 ```
 - test if torcs is running by typing `torcs` in a new terminal window
-- Installing the scr-patch
-  - Download [scr-patch](https://sourceforge.net/projects/cig/files/SCR%20Championship/Server%20Linux/2.1/scr-linux-patch.tgz/download)
-  - unpack the scr at the base of the torcs repo `torcs-1.3.6/..`
- ``` shell
- cd scr-patch
- sh do_patch.sh #whenever prompted choose the default action [n]
- cd ..
- make
- sudo make install
- sudo make datainstall
- ```
- - test if scr client is installed or not.
-   - open TORCS, navigate to configure race (race->quickrace->configure race -> select drivers) 
-   - check the Not-Selected list for `scr-serverx` where x will range in [1,9]
-- Installing the cpp scr client
-  - Download [scr-client-cpp](https://sourceforge.net/projects/cig/files/SCR%20Championship/Client%20C%2B%2B/2.0/scr-client-cpp.tgz/download)
-  - unpack the scr at the base of the torcs repo `torcs-1.3.6/..`
-``` shell
-cd scr-client-cpp
-make
-```
-_Tested on ubuntu-16.04_
-# Installation M.A.D.R.A.S
+- test if scr client is installed or not.
+  - open TORCS, navigate to configure race (race->quickrace->configure race -> select drivers) 
+  - check the Not-Selected list for `scr-serverx` where x will range in [1,9]
+
+_Tested on ubuntu-16.04 & ubuntu-18.04_
+
+### Installation MADRaS
 
 ``` shell
-git clone https://github.com/rudrasohan/M.A.D.R.A.S_dev.git
-sudo -H pip3 install -r requirements.txt
+# if req an env can also be created
+git clone https://github.com/madras-simulator/MADRaS
+cd MADRaS/
+pip3 install -e .
 ```
-### Maintainers
+
+For further information regarding the simulator please checkout our [Wiki](https://github.com/madras-simulator/MADRaS/wiki)
+ 
+## Maintainers
  - [Sohan Rudra](https://github.com/rudrasohan)
  - [Anirban Santara](https://github.com/Santara)
  - [Meha Kaushik](https://github.com/MehaKaushik)
+ 
+ ## Credits
+ 
+ ### Developers:
+ - [Abhishek Naik](https://github.com/abhisheknaik96)
+ - [Sohan Rudra](https://github.com/rudrasohan)
+ - [Meha Kaushik](https://github.com/MehaKaushik)
+ - [Buridi Aditya](https://github.com/buridiaditya)
+ 
+ ### Project Manager:
+ - [Anirban Santara](https://github.com/Santara)
+ 
+ ### Mentors:
+ - [Bharat Kaul](https://ai.intel.com/bio/bharat-kaul/)
+ - [Balaraman Ravindran](https://www.cse.iitm.ac.in/~ravi/) 

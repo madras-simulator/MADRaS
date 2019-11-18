@@ -56,7 +56,7 @@ import sys
 import getopt
 import os
 import time
-
+import subprocess
 
 PI = 3.14159265359
 
@@ -139,17 +139,20 @@ class Client(object):
     """The class implementation of the server client model."""
 
     def __init__(self, H=None, p=None, i=None,
-                 e=None, t=None, s=None, d=None, vision=False):
+                 e=None, t=None, s=None, d=None, vision=False,visualise=True,no_of_visualisations=1):
         """Init method for class Client."""
+        self.serverPID = None
         self.vision = vision
         self.host = 'localhost'
+        self.visualise=visualise
+        self.no_of_visualisations = no_of_visualisations
         self.port = 3001
         self.sid = 'SCR'
         self.maxEpisodes = 1  # "Maximum number of episodes to perform"
         self.trackname = 'unknown'
         self.stage = 3  # 0=Warm-up, 1=Qualifying 2=Race, 3=unknown <Default=3>
         self.debug = False
-        self.maxSteps = 100000  # 50steps/second
+        self.maxSteps = 10000000  # 50steps/second
         # self.parse_the_command_line()
         if H:
             self.host = H
@@ -168,9 +171,11 @@ class Client(object):
         self.S = ServerState()
         self.R = DriverAction()
         self.setup_connection()
+        
 
     def setup_connection(self):
         """Set Up UDP Socket."""
+        print("Trying to set connection")
         try:
             self.so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except socket.error as emsg:
@@ -179,7 +184,7 @@ class Client(object):
         # == Initialize Connection To Server ==
         self.so.settimeout(1)
 
-        n_fail = 100
+        n_fail = 15
         while True:
             """This string establishes track sensor angles!
             You can customize them.
@@ -192,6 +197,7 @@ class Client(object):
             initmsg = '%s(init %s)' % (self.sid, a)
 
             try:
+                print('Trying to establish connection')
                 self.so.sendto(initmsg.encode(), (self.host, self.port))
             except socket.error as emsg:
                 sys.exit(-1)
@@ -203,23 +209,41 @@ class Client(object):
                 print("Waiting for server on %d............" % self.port)
                 print("Count Down : " + str(n_fail))
                 if n_fail < 0:
-                    print("relaunch torcs")
-                    os.system('pkill torcs')
+                    print("relaunch torcs in snakeoil")
+                    if self.serverPID is not None:
+                        command = 'kill {}'.format(self.serverPID)
+                        os.system(command)
+                        self.serverPID = None
                     time.sleep(1.0)
 
-                    """if self.vision is False:
-                    os.system(u'torcs -nofuel -nodamage -nolaptime &')
+                    # if self.vision is False:
+                    #     os.system(u'torcs -nofuel -nodamage -nolaptime &')
+                    # else:
+                    #     os.system(u'torcs -nofuel -nodamage -nolaptime -vision &')
+                    # time.sleep(1.0)
+                    
+                    # os.system('sh scripts/autostart.sh')
+                    command = None
+                    rank = MPI.COMM_WORLD.Get_rank()
+
+                    if rank < self.no_of_visualisations and self.visualise:
+                        command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.port)
                     else:
-                    os.system(u'torcs -nofuel -nodamage -nolaptime -vision &')
-                    time.sleep(1.0)
-                    """
-                    os.system('sh scripts/autostart.sh')
-                    n_fail = 100
+                        command = 'export TORCS_PORT={} && torcs -t 10000000  -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
+                    if self.vision is True:
+                        command += ' -vision'
+                    self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
+                    time.sleep(0.5)
+                    
+                    n_fail = 50
                 n_fail -= 1
 
             identify = '***identified***'
             if identify in sockdata:
+                data = sockdata.split(':')
+                self.serverPID = int(data[1].rstrip('\x00'))
                 print("Client connected on %d.............." % self.port)
+                print("Server PID is %d.............." % self.serverPID)
                 break
 
     def parse_the_command_line(self):
