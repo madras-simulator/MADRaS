@@ -3,7 +3,7 @@ vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
-visualise: True  # whether to render TORCS window
+visualise: False  # whether to render TORCS window
 no_of_visualisations: 1
 track_len: 7014.6
 state_dim: 29
