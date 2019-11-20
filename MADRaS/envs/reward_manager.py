@@ -53,7 +53,7 @@ class TorcsReward(MadrasReward):
     def compute_reward(self, game_config, game_state):
         del game_config
         if not math.isnan(game_state["torcs_reward"]):
-            return self.cfg.scale * game_state["torcs_reward"]
+            return self.cfg["scale"] * game_state["torcs_reward"]
         else:
             return 0.0
 
@@ -65,7 +65,7 @@ class ProgressReward(MadrasReward):
         super(ProgressReward, self).__init__(cfg)
 
     def compute_reward(self, game_config, game_state):
-        reward = (self.cfg.scale * (game_state["distance_traversed"] - self.prev_dist)
+        reward = (self.cfg["scale"] * (game_state["distance_traversed"] - self.prev_dist)
                   / game_config.track_len)
         self.prev_dist = deepcopy(game_state["distance_traversed"])
         return reward

@@ -1,9 +1,9 @@
 port: 60934
-vision: False
+vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
-visualise: True
+visualise: True  # whether to render TORCS window
 no_of_visualisations: 1
 track_len: 7014.6
 state_dim: 29
@@ -25,7 +25,7 @@ pid_settings:
   pid_latency: 10
 
 # Observation mode
-observations: TorcsObs
+observations: "'TorcsObs'"
 
 # Reward function
 rewards:
