@@ -3,6 +3,7 @@ import numpy as np
 
 
 class PIDController(object):
+    """PID controller class for controlling position and velocity of MADRaS cars."""
     def __init__(self, cfg):
         self.accel_pid = PID(np.asarray(cfg['accel_pid']))
         self.steer_pid = PID(np.asarray(cfg['steer_pid']))

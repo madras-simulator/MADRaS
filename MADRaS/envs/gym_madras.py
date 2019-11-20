@@ -34,6 +34,7 @@ import observation_manager as om
 DEFAULT_SIM_OPTIONS_FILE = "data/sim_options.yml"
 
 class MadrasConfig(object):
+    """Configuration class for MADRaS Gym environment."""
     def __init__(self):
         self.vision = False
         self.throttle = True
@@ -52,6 +53,12 @@ class MadrasConfig(object):
         self.dones = {}
 
     def update(self, cfg_dict):
+        """Update the configuration terms from a dictionary.
+        
+        Args:
+            cfg_dict: dictionary whose keys are the names of class attributes whose
+                      values must be updated
+        """
         if cfg_dict is None:
             return
         direct_attributes = ['vision', 'throttle', 'gear_change', 'port', 'pid_assist',
@@ -80,7 +87,7 @@ def parse_yaml(yaml_file):
 
 
 class MadrasEnv(TorcsEnv, gym.Env):
-    """Definition of the Gym Madras Env."""
+    """Definition of the Gym Madras Environment."""
     def __init__(self, cfg_path=None):
         # If `visualise` is set to False torcs simulator will run in headless mode
         """Init Method."""
@@ -146,17 +153,16 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
-        #if self._config.visualise:
-        #    os.system('sh autostart.sh {}'.format(window_title))
 
    
     def reset(self, prev_step_info=None):
-        """Reset Method. To be called at the end of each episode"""
+        """Reset Method to be called at the end of each episode."""
         if self.initial_reset:
             while self.ob is None:
                 try:
                     self.client = snakeoil3.Client(p=self._config.port,
-                                                   vision=self._config.vision,visualise=self._config.visualise)
+                                                   vision=self._config.vision,
+                                                   visualise=self._config.visualise)
                     # Open new UDP in vtorcs
                     self.client.MAX_STEPS = self._config.client_max_steps
                     self.client.get_servers_input(step=0)
@@ -183,11 +189,12 @@ class MadrasEnv(TorcsEnv, gym.Env):
         return s_t
 
     def wait_for_observation(self):
+        """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
             try:
                 self.client = snakeoil3.Client(p=self._config.port,
-                                                vision=self._config.vision)
+                                               vision=self._config.vision)
                 # Open new UDP in vtorcs
                 self.client.MAX_STEPS = self._config.client_max_steps
                 self.client.get_servers_input(0)
@@ -199,7 +206,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 pass
 
     def step_vanilla(self, action):
-        """Execute single step with acceleration, steer, brake controls"""
+        """Execute single step with acceleration, steer, brake controls."""
         r = 0.0
         try:
             self.ob, r, done, info = TorcsEnv.step(self, 0,
@@ -221,7 +228,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
 
     def step_pid(self, desire):
-        """Step method to be called at each time step."""
+        """Execute single step with lane_pos, velocity controls."""
         reward = 0
 
         for PID_step in range(self._config.pid_settings['pid_latency']):
