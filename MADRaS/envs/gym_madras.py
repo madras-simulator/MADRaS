@@ -15,9 +15,9 @@ The following enhancements were made for Multi-agent synchronization using excep
 import math
 from copy import deepcopy
 import numpy as np
-import MADRaS.utils.snakeoil3_gym as snakeoil3
-from MADRaS.utils.gym_torcs import TorcsEnv
-import MADRaS.controllers.pid as PID
+import utils.snakeoil3_gym as snakeoil3
+from utils.gym_torcs import TorcsEnv
+from controllers.pid import PIDController
 import gym
 from gym.utils import seeding
 import os
@@ -27,11 +27,11 @@ import time
 from mpi4py import MPI
 import socket
 import yaml
-import reward_manager as rm
-import done_manager as dm
-import observation_manager as om
+import envs.reward_manager as rm
+import envs.done_manager as dm
+import envs.observation_manager as om
 
-DEFAULT_SIM_OPTIONS_FILE = "data/sim_options.yml"
+DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options.yml"
 
 class MadrasConfig(object):
     """Configuration class for MADRaS Gym environment."""
@@ -62,7 +62,7 @@ class MadrasConfig(object):
         if cfg_dict is None:
             return
         direct_attributes = ['vision', 'throttle', 'gear_change', 'port', 'pid_assist',
-                             'pid_latency', 'visualize', 'no_of_visualizations', 'track_len',
+                             'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
                              'state_dim', 'early_stop', 'accel_pid', 'steer_pid', 'observations',
                              'rewards', 'dones', 'pid_settings']
         for key in direct_attributes:
@@ -97,7 +97,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         if self._config.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
-            self.action_dim = 3  # Accel, Steer, Brake
+            self.action_dim = 3  # Steer, Accel, Brake
         self.observation_manager = om.ObservationManager(self._config.observations)
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
@@ -112,7 +112,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.client_type = 0  # Snakeoil client type
         self.initial_reset = True
         if self._config.pid_assist:
-            self.PID_controller = PID.PIDController(self._config.pid_settings)
+            self.PID_controller = PIDController(self._config.pid_settings)
         self.ob = None
         self.seed()
         self.start_torcs_process()
@@ -143,7 +143,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
 
-        
         if rank < self._config.no_of_visualisations and self._config.visualise:
             command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.port)
         else:
@@ -158,20 +157,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
     def reset(self, prev_step_info=None):
         """Reset Method to be called at the end of each episode."""
         if self.initial_reset:
-            while self.ob is None:
-                try:
-                    self.client = snakeoil3.Client(p=self._config.port,
-                                                   vision=self._config.vision,
-                                                   visualise=self._config.visualise)
-                    # Open new UDP in vtorcs
-                    self.client.MAX_STEPS = self._config.client_max_steps
-                    self.client.get_servers_input(step=0)
-                    # Get the initial input from torcs
-                    raw_ob = self.client.S.d
-                    # Get the current full-observation
-                    self.ob = self.make_observation(raw_ob)
-                except:
-                    pass
+            self.wait_for_observation()
             self.initial_reset = False
 
         else:
@@ -194,7 +180,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
         while self.ob is None:
             try:
                 self.client = snakeoil3.Client(p=self._config.port,
-                                               vision=self._config.vision)
+                                               vision=self._config.vision,
+                                               visualise=self._config.visualise)
                 # Open new UDP in vtorcs
                 self.client.MAX_STEPS = self._config.client_max_steps
                 self.client.get_servers_input(0)
@@ -215,8 +202,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
         except Exception as e:
             print(("Exception {} caught at port {}".format(str(e), self._config.port)))
             self.wait_for_observation()
-        game_state = {"gym_reward": r,
-                      "gym_done": done,
+        game_state = {"torcs_reward": r,
+                      "torcs_done": done,
                       "distance_traversed": self.client.S.d['distRaced']}
         reward = self.reward_manager.get_reward(self._config, game_state)
 
@@ -240,8 +227,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
             except Exception as e:
                 print(("Exception {} caught at port {}".format(str(e), self._config.port)))
                 self.wait_for_observation()
-            game_state = {"gym_reward": r,
-                          "gym_done": done,
+            game_state = {"torcs_reward": r,
+                          "torcs_done": done,
                           "distance_traversed": self.client.S.d['distRaced']}
             reward += self.reward_manager.get_reward(self._config, game_state)
             if self._config.pid_assist:

@@ -57,7 +57,7 @@ class TorcsDone(MadrasDone):
 class RaceOver(MadrasDone):
     """Terminates episode when the agent has finishes one lap."""
     def check_done(self, game_config, game_state):
-        if game_state["distance_traversed"] >= game_config["track_len"]:
+        if game_state["distance_traversed"] >= game_config.track_len:
             return True
         else:
             return False
