@@ -31,7 +31,7 @@ class RewardManager(object):
 
 
 class MadrasReward(object):
-    """Base class of MADRaS reward functions.
+    """Base class of MADRaS reward function classes.
     Any new reward class must inherit this class and implement
     the following methods:
         - [required] compute_reward(game_config, game_state)

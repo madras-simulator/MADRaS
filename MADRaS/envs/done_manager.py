@@ -4,6 +4,7 @@ import warnings
 
 
 class DoneManager(object):
+    """Composes the done function from a given done configuration."""
     def __init__(self, cfg):
         self.dones = {}
         for key in cfg:
@@ -29,6 +30,12 @@ class DoneManager(object):
 
 
 class MadrasDone(object):
+    """Base class of MADRaS done function classes.
+    Any new done class must inherit this class and implement
+    the following methods:
+        - [required] check_done(game_config, game_state)
+        - [optional] reset()
+    """
     def check_done(self, game_config, game_state):
         del game_config, game_state
         raise NotImplementedError("Successor class must implement this method.")
@@ -38,6 +45,7 @@ class MadrasDone(object):
 
 
 class TorcsDone(MadrasDone):
+    """Vanilla done function provided by TORCS."""
     def check_done(self, game_config, game_state):
         del game_config
         if not math.isnan(game_state["torcs_done"]):
@@ -47,6 +55,7 @@ class TorcsDone(MadrasDone):
 
 
 class RaceOver(MadrasDone):
+    """Terminates episode when the agent has finishes one lap."""
     def check_done(self, game_config, game_state):
         if game_state["distance_traversed"] >= game_config.track_len:
             return True
