@@ -3,11 +3,14 @@ vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
-visualise: False  # whether to render TORCS window
+visualise: True  # whether to render TORCS window
 no_of_visualisations: 1
-track_len: 7014.6
+track_len: 2843.10  # in metres. CG Track 3. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
+track_width: 10.0
+target_speed: 13.89  # metres per sec
 state_dim: 29
 early_stop: True
+normalize_actions: True  # all actions in [-1, 1]
 
 # PID params
 pid_assist: False
@@ -25,7 +28,17 @@ pid_settings:
   pid_latency: 10
 
 # Observation mode
-observations: "'TorcsObs'"
+observations:
+  mode: TorcsObs
+  normalize: True  # All observations in [-1, 1] (most of the time) 
+  obs_min:
+    angle: -3.142
+    track: 0.0
+    trackPos: -1.0
+  obs_max:
+    angle: 3.142
+    track: 200.0
+    trackPos: 1.0
 
 # Reward function
 rewards:

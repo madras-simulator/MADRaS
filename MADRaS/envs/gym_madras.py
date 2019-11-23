@@ -46,7 +46,9 @@ class MadrasConfig(object):
         self.visualise = False
         self.no_of_visualisations = 1
         self.track_len = 7014.6
+        self.target_speed = 15.0
         self.state_dim = 29
+        self.normalize_actions = False
         self.early_stop = True
         self.observations = None
         self.rewards = {}
@@ -63,8 +65,9 @@ class MadrasConfig(object):
             return
         direct_attributes = ['vision', 'throttle', 'gear_change', 'port', 'pid_assist',
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
-                             'state_dim', 'early_stop', 'accel_pid', 'steer_pid', 'observations',
-                             'rewards', 'dones', 'pid_settings']
+                             'target_speed', 'state_dim', 'early_stop', 'accel_pid', 'steer_pid',
+                             'normalize_actions', 'observations', 'rewards', 'dones',
+                             'pid_settings']
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -167,7 +170,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 self.wait_for_observation()
 
         self.distance_traversed = 0
-        s_t = self.observation_manager.get_obs(self.ob)
+        s_t = self.observation_manager.get_obs(self.ob, self._config)
         if self._config.pid_assist:
             self.PID_controller.reset()
         self.reward_manager.reset()
@@ -193,8 +196,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 pass
 
     def step_vanilla(self, action):
-        """Execute single step with acceleration, steer, brake controls."""
+        """Execute single step with steer, acceleration, brake controls."""
+        if self._config.normalize_actions:
+            action[1] = (action[1] + 1) / 2.0  # acceleration back to [0, 1]
+            action[2] = (action[2] + 1) / 2.0  # brake back to [0, 1]
+
         r = 0.0
+        print(action)
         try:
             self.ob, r, done, info = TorcsEnv.step(self, 0,
                                                    self.client, action,
@@ -209,14 +217,18 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
         done = self.done_manager.get_done_signal(self._config, game_state)
 
-        next_obs = self.observation_manager.get_obs(self.ob)
+        next_obs = self.observation_manager.get_obs(self.ob, self._config)
 
         return next_obs, reward, done, info
 
 
     def step_pid(self, desire):
         """Execute single step with lane_pos, velocity controls."""
-        reward = 0
+        if self._config.normalize_actions:
+            speed_scale = 2.0 * self._config.target_speed
+            desire[1] *= speed_scale
+
+        reward = 0.0
 
         for PID_step in range(self._config.pid_settings['pid_latency']):
             a_t = self.PID_controller.get_action(desire)
@@ -237,7 +249,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             if done:
                 break
 
-        next_obs = self.observation_manager.get_obs(self.ob)
+        next_obs = self.observation_manager.get_obs(self.ob, self._config)
 
         return next_obs, reward, done, info
 
