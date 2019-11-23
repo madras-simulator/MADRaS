@@ -46,6 +46,7 @@ class MadrasConfig(object):
         self.visualise = False
         self.no_of_visualisations = 1
         self.track_len = 7014.6
+        self.max_steps = 20000
         self.target_speed = 15.0
         self.state_dim = 29
         self.normalize_actions = False
@@ -65,8 +66,8 @@ class MadrasConfig(object):
             return
         direct_attributes = ['vision', 'throttle', 'gear_change', 'port', 'pid_assist',
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
-                             'target_speed', 'state_dim', 'early_stop', 'accel_pid', 'steer_pid',
-                             'normalize_actions', 'observations', 'rewards', 'dones',
+                             'max_steps', 'target_speed', 'state_dim', 'early_stop', 'accel_pid',
+                             'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
                              'pid_settings']
         for key in direct_attributes:
             if key in cfg_dict:
@@ -202,7 +203,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
             action[2] = (action[2] + 1) / 2.0  # brake back to [0, 1]
 
         r = 0.0
-        print(action)
         try:
             self.ob, r, done, info = TorcsEnv.step(self, 0,
                                                    self.client, action,
@@ -212,12 +212,18 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.wait_for_observation()
         game_state = {"torcs_reward": r,
                       "torcs_done": done,
-                      "distance_traversed": self.client.S.d['distRaced']}
+                      "distance_traversed": self.client.S.d['distRaced'],
+                      "angle": self.client.S.d["angle"],
+                      "damage": self.client.S.d["damage"]}
         reward = self.reward_manager.get_reward(self._config, game_state)
 
         done = self.done_manager.get_done_signal(self._config, game_state)
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)
+
+        if done:
+            self.client.R.d["meta"] = True  # Terminate the episode
+            print('Terminating PID {}'.format(self.client.serverPID))
 
         return next_obs, reward, done, info
 
@@ -241,12 +247,16 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
-                          "distance_traversed": self.client.S.d['distRaced']}
+                          "distance_traversed": self.client.S.d["distRaced"],
+                          "angle": self.client.S.d["angle"],
+                          "damage": self.client.S.d["damage"]}
             reward += self.reward_manager.get_reward(self._config, game_state)
             if self._config.pid_assist:
                 self.PID_controller.update(self.ob)
             done = self.done_manager.get_done_signal(self._config, game_state)
             if done:
+                self.client.R.d["meta"] = True  # Terminate the episode
+                print('Terminating PID {}'.format(self.client.serverPID))
                 break
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)

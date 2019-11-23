@@ -36,6 +36,9 @@ class MadrasDone(object):
         - [required] check_done(game_config, game_state)
         - [optional] reset()
     """
+    def __init__(self):
+        pass
+
     def check_done(self, game_config, game_state):
         del game_config, game_state
         raise NotImplementedError("Successor class must implement this method.")
@@ -58,6 +61,48 @@ class RaceOver(MadrasDone):
     """Terminates episode when the agent has finishes one lap."""
     def check_done(self, game_config, game_state):
         if game_state["distance_traversed"] >= game_config.track_len:
+            print("Done: Race over!")
+            return True
+        else:
+            return False
+
+
+class TimeOut(MadrasDone):
+    def __init__(self):
+        self.num_steps = 0
+
+    def check_done(self, game_config, game_state):
+        del game_state
+        self.num_steps += 1
+        if not game_config.max_steps:
+            max_steps = int(game_config.track_len / game_config.target_speed * 50)
+        else:
+            max_steps = game_config.max_steps
+        if self.num_steps >= max_steps:
+            print("Done: Episode terminated due to timeout.")
+            return True
+        else:
+            return False
+
+
+class Collision(MadrasDone):
+    def __init__(self):
+        self.damage = 0.0
+
+    def check_done(self, game_config, game_state):
+        del game_config
+        if self.damage < game_state["damage"]:
+            print("Done: Episode terminated because agent collided.")
+            return True
+        else:
+            return False
+
+
+class TurnBackward(MadrasDone):
+    def check_done(self, game_config, game_state):
+        del game_config
+        if np.cos(game_state["angle"]) < 0:
+            print("Done: Episode terminated because agent turned backward.")
             return True
         else:
             return False

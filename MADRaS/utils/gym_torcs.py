@@ -151,23 +151,15 @@ class TorcsEnv:
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
             reward = -200
             episode_terminate = True
-            client.R.d['meta'] = True
-            print('Terminating because Out of Track')
 
         if np.cos(obs['angle']) < 0: # Episode is terminated if the agent runs backward
             episode_terminate = True
-            client.R.d['meta'] = True
-            print('Terminating because agent Turned Back')
 
-
-        if client.R.d['meta'] is True: # Send a reset signal
+        if episode_terminate:
             self.initial_run = False
-            print('Terminating PID {}'.format(client.serverPID))
-            # client.respond_to_server()
-            #self.reset(client)
 
         self.time_step += 1
-        return self.observation, reward, client.R.d['meta'], {}
+        return self.observation, reward, episode_terminate, {}
 
 
     def reset(self, client, relaunch=True):        

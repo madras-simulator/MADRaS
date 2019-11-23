@@ -6,6 +6,7 @@ client_max_steps: -1  # to be interpreted as np.inf
 visualise: True  # whether to render TORCS window
 no_of_visualisations: 1
 track_len: 2843.10  # in metres. CG Track 3. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
+max_steps: 20000  # max episode length
 track_width: 10.0
 target_speed: 13.89  # metres per sec
 state_dim: 29
@@ -42,12 +43,18 @@ observations:
 
 # Reward function
 rewards:
-  TorcsReward:
+  ProgressReward2:
     scale: 1.0
-  ProgressReward:
+  AvgSpeedReward:
     scale: 1.0
+  CollisionPenalty:
+    scale: 10.0
+  TurnBackwardPenalty:
+    scale: 10.0
 
 # Done function
 dones:
-  - TorcsDone
   - RaceOver
+  - TimeOut
+  - Collision
+  - TurnBackward
