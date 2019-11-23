@@ -265,9 +265,9 @@ class TorcsEnv:
                      'wheelSpinVel']
             Observation = col.namedtuple('Observaion', names)
             return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
-                               speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/300.0,
-                               speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/300.0,
-                               speedZ=np.array(raw_obs['speedZ'], dtype=madras.floatX)/300.0,
+                               speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/self.default_speed,
+                               speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/self.default_speed,
+                               speedZ=np.array(raw_obs['speedZ'], dtype=madras.floatX)/self.default_speed,
                                angle=np.array(raw_obs['angle'], dtype=madras.floatX)/3.1416,
                                damage=np.array(raw_obs['damage'], dtype=madras.floatX),
                                opponents=np.array(raw_obs['opponents'], dtype=madras.floatX)/200.,

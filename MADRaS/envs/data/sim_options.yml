@@ -29,8 +29,8 @@ pid_settings:
 
 # Observation mode
 observations:
-  mode: TorcsObs
-  normalize: True  # All observations in [-1, 1] (most of the time) 
+  mode: SingleAgentSimpleLapObs
+  normalize: False  # gym_torcs normalizes by default
   obs_min:
     angle: -3.142
     track: 0.0
