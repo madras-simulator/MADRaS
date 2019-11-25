@@ -10,7 +10,7 @@ class RewardManager(object):
         self.rewards = {}
         for key in cfg:
             try:
-                exec("self.rewards[{}] = {}({})".format(key, key, cfg[key]))
+                exec("self.rewards['{}'] = {}({})".format(key, key, cfg[key]))
             except:
                 raise ValueError("Unknown reward class {}".format(key))
 

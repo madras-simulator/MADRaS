@@ -62,3 +62,21 @@ dones:
   - Collision
   - TurnBackward
   - OutOfTrack
+
+# Traffic agents
+traffic:
+  - ConstVelTrafficAgent:
+      port: 3001
+      target_speed: 20
+      target_lane_pos: 0.0
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1

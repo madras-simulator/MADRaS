@@ -13,7 +13,7 @@ class ObservationManager(object):
         try:
             exec("self.obs = {}()".format(cfg["mode"]))
         except:
-            raise ValueError("Unrecognized observation mode {}".format(mode))
+            raise ValueError("Unrecognized observation mode {}".format(cfg["mode"]))
 
     def get_obs(self, full_obs, game_config):
         if self.cfg["normalize"]:

@@ -9,7 +9,7 @@ class DoneManager(object):
         self.dones = {}
         for key in cfg:
             try:
-                exec("self.dones[{}] = {}()".format(key, key))
+                exec("self.dones['{}'] = {}()".format(key, key))
             except:
                 raise ValueError("Unknown done class {}".format(key))
 

@@ -30,6 +30,7 @@ import yaml
 import envs.reward_manager as rm
 import envs.done_manager as dm
 import envs.observation_manager as om
+import traffic.traffic as traffic
 
 DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options.yml"
 
@@ -53,6 +54,7 @@ class MadrasConfig(object):
         self.observations = None
         self.rewards = {}
         self.dones = {}
+        self.traffic = {}
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -67,7 +69,7 @@ class MadrasConfig(object):
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
-                             'pid_settings']
+                             'pid_settings', 'traffic']
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -105,6 +107,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                          self._config.vision)
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
+        if self._config.traffic:
+            self.traffic_manager = traffic.MadrasTrafficManager(self._config.traffic)
+
         TorcsEnv.__init__(self,
                           vision=self._config.vision,
                           throttle=self._config.throttle,
@@ -182,6 +187,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 else:
                     print("Reset: Reset failed as agent started off track. Retrying...")
 
+        if self._config.traffic:
+            self.traffic_manager.reset()
+
         self.distance_traversed = 0
         s_t = self.observation_manager.get_obs(self.ob, self._config)
         if self._config.pid_assist:
@@ -224,7 +232,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                    self._config.early_stop)
         
         except Exception as e:
-            print(("Exception {} caught at port {}".format(str(e), self._config.port)))
+            print("Exception {} caught at port {}".format(str(e), self._config.port))
             self.wait_for_observation()
 
         game_state = {"torcs_reward": r,
@@ -240,6 +248,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)
         if done:
+            if self._config.traffic:
+                self.traffic_manager.kill_all_traffic_agents()
             self.client.R.d["meta"] = True  # Terminate the episode
             print('Terminating PID {}'.format(self.client.serverPID))
 
@@ -249,8 +259,14 @@ class MadrasEnv(TorcsEnv, gym.Env):
     def step_pid(self, desire):
         """Execute single step with lane_pos, velocity controls."""
         if self._config.normalize_actions:
-            speed_scale = 2.0 * self._config.target_speed
-            desire[1] *= speed_scale
+            # [-1, 1] should correspond to [-self._config.target_speed,
+            #                                self._config.target_speed]
+            speed_scale = self._config.target_speed
+            desire[1] *= speed_scale  # Now in m/s
+            # convert to km/hr
+            desire[1] *= 3600/1000  # Now in km/hr
+            # Normalize to gym_torcs specs
+            desire[1] /= self.default_speed
 
         reward = 0.0
 
@@ -261,7 +277,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                        self.client, a_t,
                                                        self._config.early_stop)
             except Exception as e:
-                print(("Exception {} caught at port {}".format(str(e), self._config.port)))
+                print("Exception {} caught at port {}".format(str(e), self._config.port))
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
