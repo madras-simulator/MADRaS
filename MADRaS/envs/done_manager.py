@@ -80,9 +80,13 @@ class TimeOut(MadrasDone):
             max_steps = game_config.max_steps
         if self.num_steps >= max_steps:
             print("Done: Episode terminated due to timeout.")
+            self.num_steps = 0
             return True
         else:
             return False
+
+    def reset(self):
+        self.num_steps = 0
 
 
 class Collision(MadrasDone):
@@ -93,9 +97,13 @@ class Collision(MadrasDone):
         del game_config
         if self.damage < game_state["damage"]:
             print("Done: Episode terminated because agent collided.")
+            self.damage = 0.0
             return True
         else:
             return False
+
+    def reset(self):
+        self.damage = 0.0
 
 
 class TurnBackward(MadrasDone):
@@ -106,3 +114,21 @@ class TurnBackward(MadrasDone):
             return True
         else:
             return False
+
+
+class OutOfTrack(MadrasDone):
+    def __init__(self):
+        self.num_steps = 0
+
+    def check_done(self, game_config, game_state):
+        del game_config
+        self.num_steps += 1
+        if game_state["trackPos"] < -1 or game_state["trackPos"] > 1 or np.any(np.asarray(game_state["track"]) < 0):
+            print("Done: Episode terminated because agent went out of track after {} steps.".format(self.num_steps))
+            self.num_steps = 0
+            return True
+        else:
+            return False
+
+    def reset(self):
+        self.num_steps = 0

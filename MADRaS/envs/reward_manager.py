@@ -85,6 +85,15 @@ class ProgressReward2(ProgressReward):
         return reward
 
 
+class ProgressReward3(ProgressReward):
+    def compute_reward(self, game_config, game_state):
+        target_speed = game_config.target_speed / 50  # m/step
+        progress = game_state["distance_traversed"] - self.prev_dist
+        reward = self.cfg["scale"] * (progress/target_speed)
+        self.prev_dist = deepcopy(game_state["distance_traversed"])
+        return reward
+
+
 class AvgSpeedReward(MadrasReward):
     def __init__(self, cfg):
         self.num_steps = 0
@@ -119,4 +128,29 @@ class TurnBackwardPenalty(MadrasReward):
         reward = 0.0
         if np.cos(game_state["angle"]) < 0:
             reward = -self.cfg["scale"]
+        return reward
+
+
+class AngAcclPenalty(MadrasReward):
+    def __init__(self, cfg):
+        self.prev_angles = [0., 0.]
+        self.threshold = cfg["max_ang_accl"]
+        super(AngAcclPenalty, self).__init__(cfg)
+
+    def reset(self):
+        self.prev_angles = [0., 0.]
+
+    def calc_ang_accl(self, angles):
+        w1 = angles[1] - angles[0]
+        w2 = angles[2] - angles[1]
+        return w2 - w1
+
+    def compute_reward(self, game_config, game_state):
+        self.prev_angles.append(game_state["angle"])
+        ang_accl = self.calc_ang_accl(self.prev_angles)
+        if np.abs(ang_accl) > self.threshold:
+            reward = - self.cfg["scale"] * np.abs(ang_accl) / self.threshold
+        else:
+            reward = 0
+        self.prev_angles = self.prev_angles[1:]
         return reward

@@ -4,7 +4,7 @@ throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
 visualise: True  # whether to render TORCS window
-no_of_visualisations: 1
+no_of_visualisations: 1  # To visualize multiple training instances (under MPI) in parallel set it to more than 1
 track_len: 2843.10  # in metres. CG Track 3. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
 max_steps: 20000  # max episode length
 track_width: 10.0
@@ -43,7 +43,7 @@ observations:
 
 # Reward function
 rewards:
-  ProgressReward2:
+  ProgressReward3:
     scale: 1.0
   AvgSpeedReward:
     scale: 1.0
@@ -51,6 +51,9 @@ rewards:
     scale: 10.0
   TurnBackwardPenalty:
     scale: 10.0
+  AngAcclPenalty:
+    scale: 1.0
+    max_ang_accl: 2.0
 
 # Done function
 dones:
@@ -58,3 +61,4 @@ dones:
   - TimeOut
   - Collision
   - TurnBackward
+  - OutOfTrack

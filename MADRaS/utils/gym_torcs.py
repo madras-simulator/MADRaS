@@ -13,10 +13,10 @@ import collections as col
 from gym import spaces
 import numpy as np
 import copy
-import MADRaS.utils.snakeoil3_gym as snakeoil3
-from MADRaS.utils.madras_datatypes import Madras
+import utils.snakeoil3_gym as snakeoil3
+import utils.madras_datatypes as md
 
-madras = Madras()
+madras = md.MadrasDatatypes()
 
 
 class TorcsEnv:
@@ -121,7 +121,6 @@ class TorcsEnv:
             client.R.d['meta'] = True
             print('Terminating because server stopped responding')
             return obs_pre, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
-            # return None, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
 
         # Get the current full-observation from torcs
         obs = client.S.d
@@ -166,9 +165,6 @@ class TorcsEnv:
         self.time_step = 0
         self.port = client.port
         if self.initial_reset is not True:
-            # client.R.d['meta'] = True
-            # client.respond_to_server()
-
             ## TENTATIVE. Restarting TORCS every episode suffers the memory leak bug!
             if relaunch is True:
                 self.reset_torcs(client)
@@ -255,7 +251,7 @@ class TorcsEnv:
                      'track', 
                      'trackPos',
                      'wheelSpinVel']
-            Observation = col.namedtuple('Observaion', names)
+            Observation = col.namedtuple('Observation', names)
             return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
                                speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/self.default_speed,
                                speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/self.default_speed,
@@ -276,7 +272,7 @@ class TorcsEnv:
                      'trackPos',
                      'wheelSpinVel',
                      'img']
-            Observation = col.namedtuple('Observaion', names)
+            Observation = col.namedtuple('Observation', names)
 
             # Get RGB from observation
             image_rgb = self.obs_vision_to_image_rgb(raw_obs[names[8]])

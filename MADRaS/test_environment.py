@@ -1,6 +1,7 @@
 import numpy as np
 import gym
 from envs.gym_madras import MadrasEnv
+import os
 
 
 def test_madras_vanilla():
@@ -10,11 +11,13 @@ def test_madras_vanilla():
     print("Initial observation: {}."
           " Verify if the number of dimensions {} is right.".format(obs, len(obs)))
     print("Testing step...")
-    for t in range(2000):
+    for t in range(20000):
         obs, r, done, _ = env.step([0.0, 1.0, -1.0])
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
-            break
+            env.reset()
+            # os.system("pkill torcs")
+            # break
 
 
 def test_madras_pid():
@@ -28,6 +31,7 @@ def test_madras_pid():
         obs, r, done, _ = env.step([0.0, 1.0])
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
+            os.system("pkill torcs")
             break
 
 

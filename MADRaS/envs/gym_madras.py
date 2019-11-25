@@ -48,7 +48,6 @@ class MadrasConfig(object):
         self.track_len = 7014.6
         self.max_steps = 20000
         self.target_speed = 15.0
-        self.state_dim = 29
         self.normalize_actions = False
         self.early_stop = True
         self.observations = None
@@ -66,7 +65,7 @@ class MadrasConfig(object):
             return
         direct_attributes = ['vision', 'throttle', 'gear_change', 'port', 'pid_assist',
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
-                             'max_steps', 'target_speed', 'state_dim', 'early_stop', 'accel_pid',
+                             'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
                              'pid_settings']
         for key in direct_attributes:
@@ -102,7 +101,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.action_dim = 2  # LanePos, Velocity
         else:
             self.action_dim = 3  # Steer, Accel, Brake
-        self.observation_manager = om.ObservationManager(self._config.observations)
+        self.observation_manager = om.ObservationManager(self._config.observations,
+                                                         self._config.vision)
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
         TorcsEnv.__init__(self,
@@ -111,7 +111,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           gear_change=self._config.gear_change,
                           visualise=self._config.visualise,
                           no_of_visualisations=self._config.no_of_visualisations)
-        self.state_dim = self._config.state_dim  # No. of sensors input
+
+        if self._config.normalize_actions:
+            self.action_space = gym.spaces.Box(low=-np.ones(3), high=np.ones(3))
+
+        self.observation_space = self.observation_manager.get_observation_space()
+        
+        self.state_dim = self.observation_manager.get_state_dim()  # No. of sensors input
         self.env_name = 'Madras_Env'
         self.client_type = 0  # Snakeoil client type
         self.initial_reset = True
@@ -158,17 +164,23 @@ class MadrasEnv(TorcsEnv, gym.Env):
         time.sleep(1)
 
    
-    def reset(self, prev_step_info=None):
+    def reset(self):
         """Reset Method to be called at the end of each episode."""
         if self.initial_reset:
             self.wait_for_observation()
             self.initial_reset = False
 
         else:
-            try:
-                self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
-            except Exception:
-                self.wait_for_observation()
+            while(True):
+                try:
+                    self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+                except Exception:
+                    self.wait_for_observation()
+
+                if not np.any(np.asarray(self.ob.track) < 0):
+                    break
+                else:
+                    print("Reset: Reset failed as agent started off track. Retrying...")
 
         self.distance_traversed = 0
         s_t = self.observation_manager.get_obs(self.ob, self._config)
@@ -176,6 +188,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.PID_controller.reset()
         self.reward_manager.reset()
         self.done_manager.reset()
+        print("Reset: Starting new episode")
+        if np.any(np.asarray(self.ob.track) < 0):
+            print("Reset produced bad track values.")
         return s_t
 
     def wait_for_observation(self):
@@ -207,20 +222,23 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.ob, r, done, info = TorcsEnv.step(self, 0,
                                                    self.client, action,
                                                    self._config.early_stop)
+        
         except Exception as e:
             print(("Exception {} caught at port {}".format(str(e), self._config.port)))
             self.wait_for_observation()
+
         game_state = {"torcs_reward": r,
                       "torcs_done": done,
                       "distance_traversed": self.client.S.d['distRaced'],
                       "angle": self.client.S.d["angle"],
-                      "damage": self.client.S.d["damage"]}
+                      "damage": self.client.S.d["damage"],
+                      "trackPos": self.client.S.d["trackPos"],
+                      "track": self.client.S.d["track"]}
         reward = self.reward_manager.get_reward(self._config, game_state)
 
         done = self.done_manager.get_done_signal(self._config, game_state)
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)
-
         if done:
             self.client.R.d["meta"] = True  # Terminate the episode
             print('Terminating PID {}'.format(self.client.serverPID))
@@ -249,7 +267,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           "torcs_done": done,
                           "distance_traversed": self.client.S.d["distRaced"],
                           "angle": self.client.S.d["angle"],
-                          "damage": self.client.S.d["damage"]}
+                          "damage": self.client.S.d["damage"],
+                          "trackPos": self.client.S.d["trackPos"],
+                          "track": self.client.S.d["track"]}
             reward += self.reward_manager.get_reward(self._config, game_state)
             if self._config.pid_assist:
                 self.PID_controller.update(self.ob)

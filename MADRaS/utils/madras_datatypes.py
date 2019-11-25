@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class Madras(object):
+class MadrasDatatypes(object):
     """Data Types class for madras."""
 
     def __init__(self):
