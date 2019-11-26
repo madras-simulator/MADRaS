@@ -16,8 +16,8 @@ def test_madras_vanilla():
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
             env.reset()
-            # os.system("pkill torcs")
-            # break
+            os.system("pkill torcs")
+            break
 
 
 def test_madras_pid():
@@ -27,7 +27,7 @@ def test_madras_pid():
     print("Initial observation: {}."
           " Verify if the number of dimensions {} is 29.".format(obs, len(obs)))
     print("Testing step...")
-    for t in range(2000):
+    for t in range(20000):
         obs, r, done, _ = env.step([0.0, 1.0])
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
@@ -36,5 +36,5 @@ def test_madras_pid():
 
 
 if __name__=='__main__':
-    test_madras_vanilla()
-    # test_madras_pid()
+    # test_madras_vanilla()
+    test_madras_pid()

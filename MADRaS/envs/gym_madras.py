@@ -95,7 +95,10 @@ class MadrasEnv(TorcsEnv, gym.Env):
     """Definition of the Gym Madras Environment."""
     def __init__(self, cfg_path=None):
         # If `visualise` is set to False torcs simulator will run in headless mode
-        """Init Method."""
+        """Init Methtimes
+5
+
+I have a client-server application that uses a UDP socket to send the data , the data only have to travel from client to server , and the server will always have the same IP. The only requirement is that I have to send messages about 10 messages per secondod."""
         self._config = MadrasConfig()
         self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None
@@ -107,8 +110,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                          self._config.vision)
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
-        if self._config.traffic:
-            self.traffic_manager = traffic.MadrasTrafficManager(self._config.traffic)
 
         TorcsEnv.__init__(self,
                           vision=self._config.vision,
@@ -131,6 +132,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.ob = None
         self.seed()
         self.start_torcs_process()
+        if self._config.traffic:
+            self.traffic_manager = traffic.MadrasTrafficManager(self._config.port, self._config.traffic)
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -171,6 +175,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
    
     def reset(self):
         """Reset Method to be called at the end of each episode."""
+        if self._config.traffic:
+            self.traffic_manager.reset()
+
         if self.initial_reset:
             self.wait_for_observation()
             self.initial_reset = False
@@ -187,9 +194,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 else:
                     print("Reset: Reset failed as agent started off track. Retrying...")
 
-        if self._config.traffic:
-            self.traffic_manager.reset()
-
         self.distance_traversed = 0
         s_t = self.observation_manager.get_obs(self.ob, self._config)
         if self._config.pid_assist:
@@ -205,6 +209,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
+            print("{} Still waiting for observation".format(self.name))
             try:
                 self.client = snakeoil3.Client(p=self._config.port,
                                                vision=self._config.vision,

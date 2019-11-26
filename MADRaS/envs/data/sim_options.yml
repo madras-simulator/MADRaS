@@ -14,7 +14,7 @@ early_stop: True
 normalize_actions: True  # all actions in [-1, 1]
 
 # PID params
-pid_assist: False
+pid_assist: True
 pid_settings:
   accel_pid:
     - 10.5  # a_x
@@ -66,9 +66,56 @@ dones:
 # Traffic agents
 traffic:
   - ConstVelTrafficAgent:
-      port: 3001
-      target_speed: 20
-      target_lane_pos: 0.0
+      target_speed: 50
+      target_lane_pos: -0.25
+      collision_time_window: 1  # second
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - SinusoidalSpeedAgent:
+      speed_amplitude: 50
+      speed_time_period: 1000
+      target_lane_pos: -0.5
+      collision_time_window: 1  # second
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - RandomLaneSwitchAgent:
+      target_speed: 50
+      collision_time_window: 1  # second
+      lane_change_interval: 5  # seconds
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - RandomStoppingAgent:
+      target_speed: 50
+      target_lane_pos: 0.5
+      max_stop_duration: 5  #steps
+      collision_time_window: 1  # second
       pid_settings:
         accel_pid:
           - 10.5  # a_x

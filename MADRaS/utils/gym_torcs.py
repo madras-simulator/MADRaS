@@ -25,7 +25,8 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, name='MadrasAgent'):
+        self.name = name
         self.vision = vision
         self.throttle = throttle
         self.gear_change = gear_change
@@ -171,7 +172,7 @@ class TorcsEnv:
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
-        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations)  # Open new UDP in vtorcs
+        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations, name=self.name)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
         # client = self.client
