@@ -3,7 +3,7 @@ vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
-visualise: True  # whether to render TORCS window
+visualise: False  # whether to render TORCS window
 no_of_visualisations: 1  # To visualize multiple training instances (under MPI) in parallel set it to more than 1
 track_len: 2843.10  # in metres. CG Track 3. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
 max_steps: 20000  # max episode length
@@ -67,7 +67,7 @@ dones:
 traffic:
   - ConstVelTrafficAgent:
       target_speed: 50
-      target_lane_pos: -0.25
+      target_lane_pos: -0.5
       collision_time_window: 1  # second
       pid_settings:
         accel_pid:
@@ -83,7 +83,7 @@ traffic:
   - SinusoidalSpeedAgent:
       speed_amplitude: 50
       speed_time_period: 1000
-      target_lane_pos: -0.5
+      target_lane_pos: -0.25
       collision_time_window: 1  # second
       pid_settings:
         accel_pid:
@@ -97,9 +97,10 @@ traffic:
         accel_scale: 1.0
         steer_scale: 0.1
   - RandomLaneSwitchAgent:
-      target_speed: 50
+      target_speed: 100
       collision_time_window: 1  # second
       lane_change_interval: 5  # seconds
+      min_safe_dist: 0.5  # meters
       pid_settings:
         accel_pid:
           - 10.5  # a_x

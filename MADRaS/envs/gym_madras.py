@@ -95,10 +95,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
     """Definition of the Gym Madras Environment."""
     def __init__(self, cfg_path=None):
         # If `visualise` is set to False torcs simulator will run in headless mode
-        """Init Methtimes
-5
-
-I have a client-server application that uses a UDP socket to send the data , the data only have to travel from client to server , and the server will always have the same IP. The only requirement is that I have to send messages about 10 messages per secondod."""
         self._config = MadrasConfig()
         self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None

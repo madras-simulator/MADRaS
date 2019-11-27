@@ -16,8 +16,7 @@ def test_madras_vanilla():
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
             env.reset()
-            os.system("pkill torcs")
-            break
+    os.system("pkill torcs")
 
 
 def test_madras_pid():
@@ -31,8 +30,8 @@ def test_madras_pid():
         obs, r, done, _ = env.step([0.0, 1.0])
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
-            os.system("pkill torcs")
-            break
+            env.reset()
+    os.system("pkill torcs")
 
 
 if __name__=='__main__':

@@ -58,6 +58,7 @@ class MadrasTrafficAgent(object):
                            )
         self.PID_controller = PIDController(cfg["pid_settings"])
         self.port = port
+        self.min_safe_dist = 0.005*(cfg["min_safe_dist"] if "min_safe_dist" in cfg else 1)  # 1 meter
 
     def wait_for_observation(self):
         """Refresh client and wait for a valid observation to come in."""
@@ -96,6 +97,7 @@ class MadrasTrafficAgent(object):
                     print("Exception {} caught by {} traffic agent at port {}".format(
                             str(e), self.name, self.port))
                     self.wait_for_observation()
+                self.detect_and_prevent_imminent_crash_out_of_track()
                 self.PID_controller.update(self.ob)
                 if done:
                     self.is_alive = False
@@ -107,6 +109,21 @@ class MadrasTrafficAgent(object):
             self.ob.opponents[17],
             self.ob.opponents[18],
             ])
+
+    def detect_and_prevent_imminent_crash_out_of_track(self):
+        while True:
+            min_dist_from_track = np.min(self.ob.track)
+            if min_dist_from_track <= self.min_safe_dist:
+                closest_dist_sensor_id = np.argmin(self.ob.track)
+                if closest_dist_sensor_id < 9:
+                    action = [1, 0, 1]
+                elif closest_dist_sensor_id > 9:
+                    action = [-1, 0, 1]
+                else:
+                    action = [0, 0, 1]
+                self.ob, _, _, _ = self.env.step(0, self.client, action)
+            else:
+                break
 
     def get_collision_cone_radius(self):
         speed = self.ob.speedX * self.env.default_speed * (1000.0 / 3600.0)  # speed in m/sec
