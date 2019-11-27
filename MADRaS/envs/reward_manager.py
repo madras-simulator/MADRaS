@@ -10,7 +10,7 @@ class RewardManager(object):
         self.rewards = {}
         for key in cfg:
             try:
-                exec("self.rewards[{}] = {}({})".format(key, key, cfg[key]))
+                exec("self.rewards['{}'] = {}({})".format(key, key, cfg[key]))
             except:
                 raise ValueError("Unknown reward class {}".format(key))
 
@@ -39,6 +39,8 @@ class MadrasReward(object):
     """
     def __init__(self, cfg):
         self.cfg = cfg
+        if "scale" not in self.cfg:
+            self.cfg["scale"] = 1.0
 
     def compute_reward(self, game_config, game_state):
         del game_config, game_state
@@ -65,10 +67,90 @@ class ProgressReward(MadrasReward):
         super(ProgressReward, self).__init__(cfg)
 
     def compute_reward(self, game_config, game_state):
-        reward = (self.cfg["scale"] * (game_state["distance_traversed"] - self.prev_dist)
-                  / game_config.track_len)
+        progress = game_state["distance_traversed"] - self.prev_dist
+        reward = self.cfg["scale"] * (progress / game_config.track_len)
         self.prev_dist = deepcopy(game_state["distance_traversed"])
         return reward
 
     def reset(self):
         self.prev_dist = 0.0
+
+
+class ProgressReward2(ProgressReward):
+    def compute_reward(self, game_config, game_state):
+        target_speed = game_config.target_speed / 50  # m/step
+        progress = game_state["distance_traversed"] - self.prev_dist
+        reward = self.cfg["scale"] * np.min([1.0, progress/target_speed])
+        self.prev_dist = deepcopy(game_state["distance_traversed"])
+        return reward
+
+
+class ProgressReward3(ProgressReward):
+    def compute_reward(self, game_config, game_state):
+        target_speed = game_config.target_speed / 50  # m/step
+        progress = game_state["distance_traversed"] - self.prev_dist
+        reward = self.cfg["scale"] * (progress/target_speed)
+        self.prev_dist = deepcopy(game_state["distance_traversed"])
+        return reward
+
+
+class AvgSpeedReward(MadrasReward):
+    def __init__(self, cfg):
+        self.num_steps = 0
+        super(AvgSpeedReward, self).__init__(cfg)
+
+    def compute_reward(self, game_config, game_state):
+        self.num_steps += 1
+        if game_state["distance_traversed"] < game_config.track_len:
+            return 0.0
+        else:
+            target_speed = game_config.target_speed / 50  # m/step
+            target_num_steps = game_config.track_len / target_speed
+            reward = self.cfg["scale"] * target_num_steps / self.num_steps
+            return reward
+
+class CollisionPenalty(MadrasReward):
+    def __init__(self, cfg):
+        self.damage = 0.0
+        super(CollisionPenalty, self).__init__(cfg)
+
+    def compute_reward(self, game_config, game_state):
+        del game_config
+        reward = 0.0
+        if self.damage < game_state["damage"]:
+            reward = -self.cfg["scale"]
+        return reward
+
+
+class TurnBackwardPenalty(MadrasReward):
+    def compute_reward(self, game_config, game_state):
+        del game_config
+        reward = 0.0
+        if np.cos(game_state["angle"]) < 0:
+            reward = -self.cfg["scale"]
+        return reward
+
+
+class AngAcclPenalty(MadrasReward):
+    def __init__(self, cfg):
+        self.prev_angles = [0., 0.]
+        self.threshold = cfg["max_ang_accl"]
+        super(AngAcclPenalty, self).__init__(cfg)
+
+    def reset(self):
+        self.prev_angles = [0., 0.]
+
+    def calc_ang_accl(self, angles):
+        w1 = angles[1] - angles[0]
+        w2 = angles[2] - angles[1]
+        return w2 - w1
+
+    def compute_reward(self, game_config, game_state):
+        self.prev_angles.append(game_state["angle"])
+        ang_accl = self.calc_ang_accl(self.prev_angles)
+        if np.abs(ang_accl) > self.threshold:
+            reward = - self.cfg["scale"] * np.abs(ang_accl) / self.threshold
+        else:
+            reward = 0
+        self.prev_angles = self.prev_angles[1:]
+        return reward

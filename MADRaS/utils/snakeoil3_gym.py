@@ -139,8 +139,12 @@ class Client(object):
     """The class implementation of the server client model."""
 
     def __init__(self, H=None, p=None, i=None,
-                 e=None, t=None, s=None, d=None, vision=False,visualise=True,no_of_visualisations=1):
+                 e=None, t=None, s=None, d=None,
+                 vision=False, visualise=True,
+                 no_of_visualisations=1,
+                 name='MadrasAgent'):
         """Init method for class Client."""
+        self.name = name
         self.serverPID = None
         self.vision = vision
         self.host = 'localhost'
@@ -175,11 +179,11 @@ class Client(object):
 
     def setup_connection(self):
         """Set Up UDP Socket."""
-        print("Trying to set connection")
+        print("{} Trying to set connection".format(self.name))
         try:
             self.so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except socket.error as emsg:
-            print('Error: Could not create socket...')
+            print("Error: {} Could not create socket...".format(self.name))
             sys.exit(-1)
         # == Initialize Connection To Server ==
         self.so.settimeout(1)
@@ -197,7 +201,7 @@ class Client(object):
             initmsg = '%s(init %s)' % (self.sid, a)
 
             try:
-                print('Trying to establish connection')
+                print('{} Trying to establish connection'.format(self.name))
                 self.so.sendto(initmsg.encode(), (self.host, self.port))
             except socket.error as emsg:
                 sys.exit(-1)
@@ -206,10 +210,11 @@ class Client(object):
                 sockdata, addr = self.so.recvfrom(data_size)
                 sockdata = sockdata.decode('utf-8')
             except socket.error as emsg:
-                print("Waiting for server on %d............" % self.port)
-                print("Count Down : " + str(n_fail))
+                print("[{}]: SocketError: {}".format(self.name, emsg))
+                print("{} Waiting for server on {}............".format(self.name, self.port))
+                print("[{}]: Count Down : {}".format(self.name, n_fail))
                 if n_fail < 0:
-                    print("relaunch torcs in snakeoil")
+                    print("[{}]: Relaunching torcs in snakeoil".format(self.name))
                     if self.serverPID is not None:
                         command = 'kill {}'.format(self.serverPID)
                         os.system(command)
@@ -242,8 +247,8 @@ class Client(object):
             if identify in sockdata:
                 data = sockdata.split(':')
                 self.serverPID = int(data[1].rstrip('\x00'))
-                print("Client connected on %d.............." % self.port)
-                print("Server PID is %d.............." % self.serverPID)
+                print("{} Client connected on {}..............".format(self.name, self.port))
+                print("[{}]: Server PID is {}..............".format(self.name, self.serverPID))
                 break
 
     def parse_the_command_line(self):
@@ -301,12 +306,11 @@ class Client(object):
                 sockdata, addr = self.so.recvfrom(data_size)
                 sockdata = sockdata.decode('utf-8')
             except socket.error as emsg:
-                print('.')
+                print('[{}]: SocketError: {}'.format(self.name, emsg))
 
-                print("Waiting for server data on %d.............."
-                      % self.port)
+                print("{} Waiting for server data on {}..............".format(self.name, self.port))
 
-                print("Server count down : " + str(n_fail))
+                print("[{}]: Server count down : {}".format(self.name, n_fail))
                 if n_fail < 0:
                     self.shutdown()
                     return -1
@@ -315,17 +319,16 @@ class Client(object):
                 n_fail -= 1
 
             if '***identified***' in sockdata:
-                print("Client connected on %d.............." % self.port)
+                print("{} Client connected on {}..............".format(self.name, self.port))
                 continue
             elif '***shutdown***' in sockdata:
-                print((("Server has stopped the race on %d. " +
-                        "You were in %d place.") %
-                      (self.port, self.S.d['racePos'])))
+                print("[{}]: Server has stopped the race on {}. "
+                      "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
                 self.shutdown()
                 return -1
             elif '***restart***' in sockdata:
                 # What do I do here?
-                print("Server has restarted the race on %d." % self.port)
+                print("[{}]: Server has restarted the race on {}.".format(self.name, self.port))
                 # I haven't actually caught the server doing this.
                 self.shutdown()
                 return -1
