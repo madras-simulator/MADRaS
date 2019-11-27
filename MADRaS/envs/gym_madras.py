@@ -40,7 +40,7 @@ class MadrasConfig(object):
         self.vision = False
         self.throttle = True
         self.gear_change = False
-        self.port = 6006
+        self.torcs_server_port = 6006
         self.pid_assist = False
         self.pid_settings = {}
         self.client_max_steps = np.inf
@@ -65,7 +65,7 @@ class MadrasConfig(object):
         """
         if cfg_dict is None:
             return
-        direct_attributes = ['vision', 'throttle', 'gear_change', 'port', 'pid_assist',
+        direct_attributes = ['vision', 'throttle', 'gear_change', 'torcs_server_port', 'pid_assist',
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
@@ -129,7 +129,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.seed()
         self.start_torcs_process()
         if self._config.traffic:
-            self.traffic_manager = traffic.MadrasTrafficManager(self._config.port, self._config.traffic)
+            self.traffic_manager = traffic.MadrasTrafficManager(
+                self._config.torcs_server_port, self._config.traffic)
 
 
     def seed(self, seed=None):
@@ -140,12 +141,20 @@ class MadrasEnv(TorcsEnv, gym.Env):
     def config(self):
         return self._config
         
-    def get_free_udp_port(self):
+    def test_torcs_server_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.bind(('', 0))
-        addr, port = udp.getsockname()
+        try:
+            udp.bind(('', self._config.torcs_server_port))
+        except:
+            print("Specified torcs_server_port {} is not available. "
+                  "Searching for alternative...".format(
+                  self._config.torcs_server_port))
+            udp.bind(('', 0))
+            _, self._config.torcs_server_port = udp.getsockname()
+            print("torcs_server_port has been reassigned to {}".format(
+                   self._config.torcs_server_port))
+
         udp.close()
-        return port
 
     def start_torcs_process(self):
         if self.torcs_proc is not None:
@@ -153,22 +162,21 @@ class MadrasEnv(TorcsEnv, gym.Env):
             time.sleep(0.5)
             self.torcs_proc = None
 
-        self._config.port = self.get_free_udp_port()
-        window_title = str(self._config.port)
+        self.test_torcs_server_port()
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
 
         if rank < self._config.no_of_visualisations and self._config.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.torcs_server_port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self._config.port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self._config.torcs_server_port)
         if self._config.vision is True:
             command += ' -vision'
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
 
-   
+
     def reset(self):
         """Reset Method to be called at the end of each episode."""
         if self._config.traffic:
@@ -207,7 +215,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         while self.ob is None:
             print("{} Still waiting for observation".format(self.name))
             try:
-                self.client = snakeoil3.Client(p=self._config.port,
+                self.client = snakeoil3.Client(p=self._config.torcs_server_port,
                                                vision=self._config.vision,
                                                visualise=self._config.visualise)
                 # Open new UDP in vtorcs
@@ -233,7 +241,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                    self._config.early_stop)
         
         except Exception as e:
-            print("Exception {} caught at port {}".format(str(e), self._config.port))
+            print("Exception {} caught at port {}".format(str(e), self._config.torcs_server_port))
             self.wait_for_observation()
 
         game_state = {"torcs_reward": r,
@@ -278,7 +286,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                        self.client, a_t,
                                                        self._config.early_stop)
             except Exception as e:
-                print("Exception {} caught at port {}".format(str(e), self._config.port))
+                print("Exception {} caught at port {}".format(
+                       str(e), self._config.torcs_server_port))
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
