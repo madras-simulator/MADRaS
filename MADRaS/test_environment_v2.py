@@ -27,7 +27,7 @@ def test_madras_pid():
     print("Initial observation: {}."
           " Verify if the number of dimensions {} is 29.".format(obs, len(obs)))
     print("Testing step...")
-    for t in range(20000):
+    for t in range(2000):
         obs, r, done, _ = env.step([[0.0, 1.0],
                                     [0.0, 1.0]])
         print("{}: reward={}, done={}".format(t, r, done))

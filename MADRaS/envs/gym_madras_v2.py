@@ -31,6 +31,7 @@ import envs.reward_manager as rm
 import envs.done_manager as dm
 import envs.observation_manager as om
 import traffic.traffic as traffic
+import multiprocessing
 
 DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options_v2.yml"
 
@@ -84,7 +85,7 @@ class MadrasAgent(TorcsEnv, gym.Env):
         raw_ob = self.client.S.d
         # Get the current full-observation from torcs
         self.ob = self.make_observation(raw_ob)
-        print("Initial observation: {}".format(self.ob))
+        print("[{}]: Initial observation: {}".format(self.name, self.ob))
         if np.any(np.asarray(self.ob.track) < 0):
             print("Reset produced bad track values.")
         self.distance_traversed = 0
@@ -100,7 +101,13 @@ class MadrasAgent(TorcsEnv, gym.Env):
         print("Reset: Starting new episode")
 
 
-    def reset(self):
+    def reset_new(self, return_dict={}):
+        self.create_new_client()
+        return_dict[self.name] = self.get_observation_from_server()
+        self.complete_reset()
+        return return_dict
+
+    def reset(self, return_dict={}):
         if self.initial_reset:
             self.wait_for_observation()
             self.initial_reset = False
@@ -126,8 +133,9 @@ class MadrasAgent(TorcsEnv, gym.Env):
         self.reward_manager.reset()
         self.done_manager.reset()
         print("Reset: Starting new episode")
+        return_dict[self.name] = s_t
 
-        return s_t
+        return return_dict
 
     def wait_for_observation(self):
         """Refresh client and wait for a valid observation to come in."""
@@ -222,11 +230,12 @@ class MadrasAgent(TorcsEnv, gym.Env):
         next_obs = self.observation_manager.get_obs(self.ob, self._config)
         return next_obs, reward, done, info
 
-    def step(self, action):
+    def step(self, action, return_dict={}):
         if self._config.pid_assist:
-            return self.step_pid(action)
+            return_dict[self.name] = self.step_pid(action)
         else:
-            return self.step_vanilla(action)
+            return_dict[self.name] = self.step_vanilla(action)
+        return return_dict
 
 
 class MadrasEnv(gym.Env):
@@ -320,30 +329,51 @@ class MadrasEnv(gym.Env):
         if self._config.traffic:
             self.traffic_manager.reset()
         s_t = {}
-        for agent in self.agents:
-            s_t[agent] = self.agents[agent].reset()
+        # TODO(santara): fix parallel reset
+        # jobs = []
+        # manager = multiprocessing.Manager()
+        # return_dict = manager.dict()
+        # for i, agent in enumerate(self.agents):
+        #     p = multiprocessing.Process(target=self.agents[agent].reset_new, args=(return_dict))
+        #     jobs.append(p)
+        #     p.start()
+
+        # for proc in jobs:
+        #     proc.join()
+        # print (return_dict)
+
+        # Serial reset : DEPRECATED, remove later
+        # for agent in self.agents:
+        #     s_t[agent] = self.agents[agent].reset()
+
         # Create clients and connect their sockets
-        # for agent in self.agents:
-        #     self.agents[agent].create_new_client()
-        # # Collect first observations
-        # for agent in self.agents:
-        #     s_t[agent] = self.agents[agent].get_observation_from_server()
-        # for agent in self.agents:
-        #     self.agents[agent].complete_reset()
+        for agent in self.agents:
+            self.agents[agent].create_new_client()
+        # Collect first observations
+        for agent in self.agents:
+            s_t[agent] = self.agents[agent].get_observation_from_server()
+        # Finish reset
+        for agent in self.agents:
+            self.agents[agent].complete_reset()
         return s_t
 
     def step(self, action):
         next_obs, reward, done, info = {}, {}, {}, {}
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        jobs = []
         for i, agent in enumerate(self.agents):
-            s1, r, d, i = self.agents[agent].step(action[i])  # TODO(santara): check the exact format of the action in rllib
-            next_obs[agent] = s1
-            reward[agent] = r
-            done[agent] = d
-            info[agent] = i
-        dones = [x for x in done.values()]
-        if np.all(dones):
-            for agent in self.agents:
-                self.agents[agent].client.R.d["meta"] = True
-            if self._config.traffic:
-                self.traffic_manager.kill_all_traffic_agents()
+            p = multiprocessing.Process(target=self.agents[agent].step, args=(action[i], return_dict))
+            jobs.append(p)
+            p.start()
+
+        for proc in jobs:
+            proc.join()
+        print (return_dict)
+        for agent in self.agents:
+            next_obs[agent] = return_dict[agent][0]
+            reward[agent] = return_dict[agent][1]
+            done[agent] = return_dict[agent][2]
+            info[agent] = return_dict[agent][3]
+
         return next_obs, reward, done, info
