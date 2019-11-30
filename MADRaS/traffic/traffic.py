@@ -9,14 +9,14 @@ MadrasDatatypes = md.MadrasDatatypes()
 
 class MadrasTrafficManager(object):
     """Creates the traffic agents for a given training configuration."""
-    def __init__(self, torcs_server_port, cfg):
+    def __init__(self, torcs_server_port, num_learning_agents, cfg):
         self.traffic_agents = {}
         self.traffic_processes = []
         for i, agent in enumerate(cfg):
             agent_type = [x for x in agent.keys()][0]  # TODO(santara): find a better way of extracting key from a dictionary with a single entry
             agent_config = agent[agent_type]
             agent_name = '{}_{}'.format(agent_type, i)
-            agent_port = torcs_server_port+i+1
+            agent_port = torcs_server_port + i + num_learning_agents
             try:
                 exec("self.traffic_agents['{}'] = {}({}, {}, '{}')".format(
                     agent_name, agent_type, agent_port, agent_config, agent_name))
@@ -86,6 +86,7 @@ class MadrasTrafficAgent(object):
 
     def flag_off(self, sleep=0):
         self.wait_for_observation()
+        print("[{}]: My server is at {}".format(self.name, self.client.serverPID))
         self.is_alive = True
         while True:
             if self.is_alive:

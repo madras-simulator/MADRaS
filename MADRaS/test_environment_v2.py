@@ -1,6 +1,6 @@
 import numpy as np
 import gym
-from envs.gym_madras import MadrasEnv
+from envs.gym_madras_v2 import MadrasEnv
 import os
 
 
@@ -12,9 +12,10 @@ def test_madras_vanilla():
           " Verify if the number of dimensions {} is right.".format(obs, len(obs)))
     print("Testing step...")
     for t in range(20000):
-        obs, r, done, _ = env.step([0.0, 1.0, -1.0])
+        obs, r, done, _ = env.step([[0.0, 1.0, -1.0]])
         print("{}: reward={}, done={}".format(t, r, done))
-        if done:
+        dones = [x for x in done.values()]
+        if np.all(dones):
             env.reset()
     os.system("pkill torcs")
 
@@ -27,10 +28,11 @@ def test_madras_pid():
           " Verify if the number of dimensions {} is 29.".format(obs, len(obs)))
     print("Testing step...")
     for t in range(20000):
-        obs, r, done, _ = env.step([0.0, 1.0])
+        obs, r, done, _ = env.step([[0.0, 1.0],
+                                    [0.0, 1.0]])
         print("{}: reward={}, done={}".format(t, r, done))
-        # if done:
-        if t == 100:
+        dones = [x for x in done.values()]
+        if np.all(dones):
             env.reset()
     os.system("pkill torcs")
 

@@ -54,7 +54,7 @@ class MadrasConfig(object):
         self.observations = None
         self.rewards = {}
         self.dones = {}
-        self.traffic = {}
+        self.traffic = []
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -82,7 +82,7 @@ class MadrasConfig(object):
         assert self.throttle == True, "Throttle must be True."
         assert self.gear_change == False, "Only automatic transmission is currently supported."
         # TODO(santara): add checks for self.state_dim
-        
+
 
 def parse_yaml(yaml_file):
     if not yaml_file:
@@ -130,8 +130,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.start_torcs_process()
         if self._config.traffic:
             self.traffic_manager = traffic.MadrasTrafficManager(
-                self._config.torcs_server_port, self._config.traffic)
-
+                self._config.torcs_server_port, 1, self._config.traffic)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -187,7 +186,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.initial_reset = False
 
         else:
-            while(True):
+            while True:
                 try:
                     self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
                 except Exception:
@@ -314,3 +313,15 @@ class MadrasEnv(TorcsEnv, gym.Env):
             return self.step_pid(action)
         else:
             return self.step_vanilla(action)
+
+
+# class MadrasEnvMulti(MadrasEnv):
+#     def __init__(self, num_learning_agents=1, cfg_path=None):
+#         self.num_learning_agents = num_learning_agents
+#         self.num_traffic_agents = len(self._config.traffic)
+#         super(MadrasEnvMulti, self).__init__(cfg_path)
+#         self.learning_agent_ports = ([self._config.torcs_server_port] +
+#                                      [(self._config.torcs_server_port + self.num_traffic_agents + i)
+#                                       for i in range(num_learning_agents+1)])
+        
+        
