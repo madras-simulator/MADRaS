@@ -181,7 +181,7 @@ class Client(object):
             print("Error: {} Could not create socket...".format(self.name))
             sys.exit(-1)
         # == Initialize Connection To Server ==
-        self.so.settimeout(1)
+        # self.so.settimeout(1)
 
         n_fail = 15
         while True:
@@ -286,7 +286,6 @@ class Client(object):
                     n_fail = n_fail_org
 
                 n_fail -= 1
-            print("[{}]: My server PID is {}".format(self.name, self.serverPID))
             if '***identified***' in sockdata:
                 print("{} Client connected on {}..............".format(self.name, self.port))
                 continue

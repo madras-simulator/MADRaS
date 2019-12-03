@@ -32,12 +32,14 @@ import envs.done_manager as dm
 import envs.observation_manager as om
 import traffic.traffic as traffic
 import multiprocessing
+import threading
 
 DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options_v2.yml"
 
 
 class MadrasAgent(TorcsEnv, gym.Env):
-    def __init__(self, name, torcs_server_port, cfg, sim_info={}):
+    def __init__(self, name, torcs_server_port, cfg, sim_info={}, debug=False):
+        self.debug = debug
         self._config = config_parser.MadrasAgentConfig()
         self.name = name
         for key in sim_info:
@@ -66,14 +68,18 @@ class MadrasAgent(TorcsEnv, gym.Env):
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
         self.initial_reset = True
+        self.client = None
 
     def create_new_client(self):
         while True:
             try:
                 self.client = snakeoil3.Client(p=self.torcs_server_port,
-                                                name=self.name)
+                                               name=self.name)
                 # Open new UDP in vtorcs
                 self.client.MAX_STEPS = self._config.client_max_steps
+                if self.debug:
+                    print("{} successfully created a client that connects to "
+                        "server-PID {}".format(self.name, self.client.serverPID))
                 break
             except Exception as e:
                 print("{} received error {} during client creation.".format(self.name, e))
@@ -85,11 +91,13 @@ class MadrasAgent(TorcsEnv, gym.Env):
         raw_ob = self.client.S.d
         # Get the current full-observation from torcs
         self.ob = self.make_observation(raw_ob)
-        print("[{}]: Initial observation: {}".format(self.name, self.ob))
+        if self.debug:
+            print("[{}]: Initial observation: {}".format(self.name, self.ob))
         if np.any(np.asarray(self.ob.track) < 0):
             print("Reset produced bad track values.")
         self.distance_traversed = 0
         s_t = self.observation_manager.get_obs(self.ob, self._config)
+        # return_dict[self.name] = s_t
 
         return s_t
 
@@ -101,13 +109,8 @@ class MadrasAgent(TorcsEnv, gym.Env):
         print("Reset: Starting new episode")
 
 
-    def reset_new(self, return_dict={}):
-        self.create_new_client()
-        return_dict[self.name] = self.get_observation_from_server()
-        self.complete_reset()
-        return return_dict
-
-    def reset(self, return_dict={}):
+    def reset(self):
+        """DEPRECATED"""
         if self.initial_reset:
             self.wait_for_observation()
             self.initial_reset = False
@@ -133,15 +136,15 @@ class MadrasAgent(TorcsEnv, gym.Env):
         self.reward_manager.reset()
         self.done_manager.reset()
         print("Reset: Starting new episode")
-        return_dict[self.name] = s_t
 
-        return return_dict
+        return s_t
 
     def wait_for_observation(self):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
-            print("{} Still waiting for observation".format(self.name))
+            if self.debug:
+                print("{} Still waiting for observation".format(self.name))
             try:
                 self.client = snakeoil3.Client(p=self.torcs_server_port,
                                                name=self.name)
@@ -240,8 +243,9 @@ class MadrasAgent(TorcsEnv, gym.Env):
 
 class MadrasEnv(gym.Env):
     """Definition of the Gym Madras Environment."""
-    def __init__(self, cfg_path=DEFAULT_SIM_OPTIONS_FILE):
+    def __init__(self, cfg_path=DEFAULT_SIM_OPTIONS_FILE, debug=False):
         # If `visualise` is set to False torcs simulator will run in headless mode
+        self.debug = debug
         self._config = config_parser.MadrasEnvConfig()
         self._config.update(config_parser.parse_yaml(cfg_path))
         self.torcs_proc = None
@@ -320,6 +324,10 @@ class MadrasEnv(gym.Env):
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         print("TORCS server PID is: ", self.torcs_proc.pid)
 
+    def get_observation_from_agent(self, agent_num):
+        agent_name = "MadrasAgent_{}".format(agent_num)
+        return self.agents[agent_name].get_observation_from_server()
+
     def reset(self):
         """Reset Method to be called at the end of each episode."""
         if not self.initial_reset:
@@ -329,32 +337,34 @@ class MadrasEnv(gym.Env):
         if self._config.traffic:
             self.traffic_manager.reset()
         s_t = {}
-        # TODO(santara): fix parallel reset
-        # jobs = []
-        # manager = multiprocessing.Manager()
-        # return_dict = manager.dict()
-        # for i, agent in enumerate(self.agents):
-        #     p = multiprocessing.Process(target=self.agents[agent].reset_new, args=(return_dict))
-        #     jobs.append(p)
-        #     p.start()
-
-        # for proc in jobs:
-        #     proc.join()
-        # print (return_dict)
-
-        # Serial reset : DEPRECATED, remove later
-        # for agent in self.agents:
-        #     s_t[agent] = self.agents[agent].reset()
-
+        
+        # Serial reset step by step : best working solution till date
         # Create clients and connect their sockets
         for agent in self.agents:
             self.agents[agent].create_new_client()
         # Collect first observations
-        for agent in self.agents:
-            s_t[agent] = self.agents[agent].get_observation_from_server()
+        p = multiprocessing.Pool(multiprocessing.cpu_count())
+        agent_nums = [0, 1]
+        result = p.map(self.get_observation_from_agent, (agent_nums,))
+        p.close()
+        p.join()
+        print(result)
+        # manager = multiprocessing.Manager()
+        # return_dict = manager.dict()
+        # jobs = []
+        # for agent in self.agents:
+        #     # s_t[agent] = self.agents[agent].get_observation_from_server()
+        #     p = multiprocessing.Process(target=self.agents[agent].get_observation_from_server, args=(return_dict))
+        #     jobs.append(p)
+        #     p.start()
+        # for proc in jobs:
+        #     proc.join()
+        # for agent in self.agents:
+        #     s_t[agent] = return_dict[agent]
         # Finish reset
         for agent in self.agents:
             self.agents[agent].complete_reset()
+
         return s_t
 
     def step(self, action):
@@ -369,7 +379,6 @@ class MadrasEnv(gym.Env):
 
         for proc in jobs:
             proc.join()
-        print (return_dict)
         for agent in self.agents:
             next_obs[agent] = return_dict[agent][0]
             reward[agent] = return_dict[agent][1]

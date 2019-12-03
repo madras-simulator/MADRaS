@@ -1,0 +1,2276 @@
+{
+    "traceEvents": [
+        {
+            "name": "process_name",
+            "ph": "M",
+            "pid": 0,
+            "args": {
+                "name": "Allocators"
+            }
+        },
+        {
+            "name": "process_name",
+            "ph": "M",
+            "pid": 1,
+            "args": {
+                "name": "/host:CPU Compute"
+            }
+        },
+        {
+            "name": "process_name",
+            "ph": "M",
+            "pid": 2,
+            "args": {
+                "name": "/host:CPU Tensors"
+            }
+        },
+        {
+            "name": "process_name",
+            "ph": "M",
+            "pid": 3,
+            "args": {
+                "name": "/job:localhost/replica:0/task:0/device:CPU:0 Compute"
+            }
+        },
+        {
+            "name": "process_name",
+            "ph": "M",
+            "pid": 4,
+            "args": {
+                "name": "/job:localhost/replica:0/task:0/device:CPU:0 Tensors"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236396,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/model/fc_value_1/BiasAdd/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236405,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/value_out/BiasAdd/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236409,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_value_1/MatMul/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236412,
+            "dur": 18,
+            "args": {
+                "name": "default_policy/model/fc_value_1/BiasAdd:_FusedMatMul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236436,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_value_1/Tanh:Tanh",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236441,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/value_out/MatMul/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236444,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_value_2/BiasAdd/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236446,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_value_2/MatMul/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236449,
+            "dur": 32,
+            "args": {
+                "name": "default_policy/model/fc_value_2/BiasAdd:_FusedMatMul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236489,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/model/fc_value_2/Tanh:Tanh",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236495,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/value_out/BiasAdd:_FusedMatMul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236521,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/Exp:Exp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236528,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/Sum_1:Sum",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236544,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/sub:Sub",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236549,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/truediv:RealDiv",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236553,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/Square:Square",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236556,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/Sum:Sum",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236561,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/mul_1:Mul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 0,
+            "ts": 1575270405236573,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/Exp_1:Exp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236397,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/fc_2/bias:VarHandleOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236406,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_2/BiasAdd/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236412,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/fc_1/bias:VarHandleOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236415,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_1/BiasAdd/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236419,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/fc_out/kernel:VarHandleOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236421,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_out/MatMul/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236424,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/fc_out/bias:VarHandleOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236426,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_out/BiasAdd/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236430,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/fc_1/kernel:VarHandleOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236433,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_1/MatMul/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236437,
+            "dur": 18,
+            "args": {
+                "name": "default_policy/model/fc_1/BiasAdd:_FusedMatMul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236459,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/model/fc_1/Tanh:Tanh",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236463,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/fc_2/kernel:VarHandleOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236465,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_2/MatMul/ReadVariableOp:ReadVariableOp",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236468,
+            "dur": 25,
+            "args": {
+                "name": "default_policy/model/fc_2/BiasAdd:_FusedMatMul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236499,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/model/fc_2/Tanh:Tanh",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236503,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_out/BiasAdd:_FusedMatMul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236511,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/split:Split",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236525,
+            "dur": 6,
+            "args": {
+                "name": "default_policy/random_normal/RandomStandardNormal:RandomStandardNormal",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236534,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/mul:Mul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236540,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/add:AddV2",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236549,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/strided_slice:StridedSlice",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236557,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/ToFloat:Cast",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236562,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/mul_2:Mul",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236565,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/sub_1:Sub",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "unknown",
+            "pid": 1,
+            "tid": 1,
+            "ts": 1575270405236569,
+            "dur": 0,
+            "args": {
+                "name": "default_policy/sub_2:Sub",
+                "op": "unknown"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "NoOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236338,
+            "dur": 6,
+            "args": {
+                "name": "_SOURCE",
+                "op": "NoOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236357,
+            "dur": 5,
+            "args": {
+                "name": "default_policy/fc_value_2/kernel",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236364,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/fc_value_2/bias",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Const",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236366,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/mul_2/x",
+                "op": "Const"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Const",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236369,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/split/split_dim",
+                "op": "Const"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Const",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236372,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/strided_slice/stack",
+                "op": "Const"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_Arg",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236374,
+            "dur": 3,
+            "args": {
+                "name": "_arg_default_policy/observation_0_2",
+                "op": "_Arg"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236378,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/value_out/kernel",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236382,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/fc_value_1/kernel",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Const",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236384,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/strided_slice/stack_1",
+                "op": "Const"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Const",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236386,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/Reshape/shape",
+                "op": "Const"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Const",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236388,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/mul_1/x",
+                "op": "Const"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236390,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/value_out/bias",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236392,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/fc_value_1/bias",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236394,
+            "dur": 9,
+            "args": {
+                "name": "default_policy/model/fc_value_1/BiasAdd/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_value_1/bias"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236394,
+            "dur": 8,
+            "args": {
+                "name": "default_policy/fc_2/bias",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236405,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/value_out/BiasAdd/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/value_out/bias"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236405,
+            "dur": 5,
+            "args": {
+                "name": "default_policy/model/fc_2/BiasAdd/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_2/bias"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236408,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/model/fc_value_1/MatMul/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_value_1/kernel"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236411,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/fc_1/bias",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236414,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_1/BiasAdd/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_1/bias"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/fc_1/bias",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236413,
+            "id": 0
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/fc_1/bias",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236414,
+            "id": 0
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236418,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/fc_out/kernel",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236421,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_out/MatMul/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_out/kernel"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236424,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/fc_out/bias",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236426,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_out/BiasAdd/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_out/bias"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236430,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/fc_1/kernel",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_FusedMatMul",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236412,
+            "dur": 21,
+            "args": {
+                "name": "default_policy/model/fc_value_1/BiasAdd",
+                "op": "_FusedMatMul",
+                "input0": "_arg_default_policy/observation_0_2",
+                "input1": "default_policy/model/fc_value_1/MatMul/ReadVariableOp",
+                "input2": "default_policy/model/fc_value_1/BiasAdd/ReadVariableOp"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "_arg_default_policy/observation_0_2",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236377,
+            "id": 1
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "_arg_default_policy/observation_0_2",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236412,
+            "id": 1
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_1/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236411,
+            "id": 2
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_1/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236412,
+            "id": 2
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_1/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236403,
+            "id": 3
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_1/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236412,
+            "id": 3
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236433,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_1/MatMul/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_1/kernel"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Tanh",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236435,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/model/fc_value_1/Tanh",
+                "op": "Tanh",
+                "input0": "default_policy/model/fc_value_1/BiasAdd"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_1/BiasAdd",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236433,
+            "id": 4
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_1/BiasAdd",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236435,
+            "id": 4
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236441,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/model/value_out/MatMul/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/value_out/kernel"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236443,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_value_2/BiasAdd/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_value_2/bias"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236446,
+            "dur": 1,
+            "args": {
+                "name": "default_policy/model/fc_value_2/MatMul/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_value_2/kernel"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_FusedMatMul",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236436,
+            "dur": 20,
+            "args": {
+                "name": "default_policy/model/fc_1/BiasAdd",
+                "op": "_FusedMatMul",
+                "input0": "_arg_default_policy/observation_0_2",
+                "input1": "default_policy/model/fc_1/MatMul/ReadVariableOp",
+                "input2": "default_policy/model/fc_1/BiasAdd/ReadVariableOp"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "_arg_default_policy/observation_0_2",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236377,
+            "id": 5
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "_arg_default_policy/observation_0_2",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236436,
+            "id": 5
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236435,
+            "id": 6
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236436,
+            "id": 6
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236416,
+            "id": 7
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236436,
+            "id": 7
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Tanh",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236458,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/model/fc_1/Tanh",
+                "op": "Tanh",
+                "input0": "default_policy/model/fc_1/BiasAdd"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/BiasAdd",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236456,
+            "id": 8
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/BiasAdd",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236458,
+            "id": 8
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "VarHandleOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236462,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/fc_2/kernel",
+                "op": "VarHandleOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236465,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_2/MatMul/ReadVariableOp",
+                "op": "ReadVariableOp",
+                "input0": "default_policy/fc_2/kernel"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_FusedMatMul",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236448,
+            "dur": 38,
+            "args": {
+                "name": "default_policy/model/fc_value_2/BiasAdd",
+                "op": "_FusedMatMul",
+                "input0": "default_policy/model/fc_value_1/Tanh",
+                "input1": "default_policy/model/fc_value_2/MatMul/ReadVariableOp",
+                "input2": "default_policy/model/fc_value_2/BiasAdd/ReadVariableOp"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236447,
+            "id": 9
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236448,
+            "id": 9
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236445,
+            "id": 10
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236448,
+            "id": 10
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Tanh",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236488,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/model/fc_value_2/Tanh",
+                "op": "Tanh",
+                "input0": "default_policy/model/fc_value_2/BiasAdd"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/BiasAdd",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236486,
+            "id": 11
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/BiasAdd",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236488,
+            "id": 11
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_FusedMatMul",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236468,
+            "dur": 29,
+            "args": {
+                "name": "default_policy/model/fc_2/BiasAdd",
+                "op": "_FusedMatMul",
+                "input0": "default_policy/model/fc_1/Tanh",
+                "input1": "default_policy/model/fc_2/MatMul/ReadVariableOp",
+                "input2": "default_policy/model/fc_2/BiasAdd/ReadVariableOp"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/Tanh",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236461,
+            "id": 12
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_1/Tanh",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236468,
+            "id": 12
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_2/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236467,
+            "id": 13
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_2/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236468,
+            "id": 13
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_2/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236410,
+            "id": 14
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_2/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236468,
+            "id": 14
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Tanh",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236499,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/model/fc_2/Tanh",
+                "op": "Tanh",
+                "input0": "default_policy/model/fc_2/BiasAdd"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_2/BiasAdd",
+            "pid": 3,
+            "tid": 2,
+            "ts": 1575270405236497,
+            "id": 15
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_2/BiasAdd",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236499,
+            "id": 15
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_FusedMatMul",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236494,
+            "dur": 7,
+            "args": {
+                "name": "default_policy/model/value_out/BiasAdd",
+                "op": "_FusedMatMul",
+                "input0": "default_policy/model/fc_value_2/Tanh",
+                "input1": "default_policy/model/value_out/MatMul/ReadVariableOp",
+                "input2": "default_policy/model/value_out/BiasAdd/ReadVariableOp"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/Tanh",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236492,
+            "id": 16
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/fc_value_2/Tanh",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236494,
+            "id": 16
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/value_out/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236442,
+            "id": 17
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/value_out/MatMul/ReadVariableOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236494,
+            "id": 17
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/model/value_out/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236407,
+            "id": 18
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/model/value_out/BiasAdd/ReadVariableOp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236494,
+            "id": 18
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_FusedMatMul",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236502,
+            "dur": 5,
+            "args": {
+                "name": "default_policy/model/fc_out/BiasAdd",
+                "op": "_FusedMatMul",
+                "input0": "default_policy/model/fc_2/Tanh",
+                "input1": "default_policy/model/fc_out/MatMul/ReadVariableOp",
+                "input2": "default_policy/model/fc_out/BiasAdd/ReadVariableOp"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Reshape",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236503,
+            "dur": 5,
+            "args": {
+                "name": "default_policy/Reshape",
+                "op": "Reshape",
+                "input0": "default_policy/model/value_out/BiasAdd",
+                "input1": "default_policy/Reshape/shape"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/Reshape/shape",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236388,
+            "id": 19
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/Reshape/shape",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236503,
+            "id": 19
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_Retval",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236509,
+            "dur": 1,
+            "args": {
+                "name": "_retval_default_policy/model/fc_out/BiasAdd_0_3",
+                "op": "_Retval",
+                "input0": "default_policy/model/fc_out/BiasAdd"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_Retval",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236510,
+            "dur": 1,
+            "args": {
+                "name": "_retval_default_policy/Reshape_0_1",
+                "op": "_Retval",
+                "input0": "default_policy/Reshape"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Split",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236511,
+            "dur": 7,
+            "args": {
+                "name": "default_policy/split",
+                "op": "Split",
+                "input0": "default_policy/split/split_dim",
+                "input1": "default_policy/model/fc_out/BiasAdd"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/split/split_dim",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236371,
+            "id": 20
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/split/split_dim",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236511,
+            "id": 20
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Shape",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236520,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/Shape",
+                "op": "Shape",
+                "input0": "default_policy/split"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Exp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236521,
+            "dur": 5,
+            "args": {
+                "name": "default_policy/Exp",
+                "op": "Exp",
+                "input0": "default_policy/split:1"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/split:1",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236518,
+            "id": 21
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/split:1",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236521,
+            "id": 21
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "RandomStandardNormal",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236525,
+            "dur": 8,
+            "args": {
+                "name": "default_policy/random_normal/RandomStandardNormal",
+                "op": "RandomStandardNormal",
+                "input0": "default_policy/Shape"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Sum",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236527,
+            "dur": 7,
+            "args": {
+                "name": "default_policy/Sum_1",
+                "op": "Sum",
+                "input0": "default_policy/split:1",
+                "input1": "default_policy/strided_slice/stack"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/split:1",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236518,
+            "id": 22
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/split:1",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236527,
+            "id": 22
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236373,
+            "id": 23
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236527,
+            "id": 23
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Mul",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236534,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/mul",
+                "op": "Mul",
+                "input0": "default_policy/Exp",
+                "input1": "default_policy/random_normal/RandomStandardNormal"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/Exp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236526,
+            "id": 24
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/Exp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236534,
+            "id": 24
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "AddV2",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236539,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/add",
+                "op": "AddV2",
+                "input0": "default_policy/mul",
+                "input1": "default_policy/split"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Shape",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236543,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/Shape_1",
+                "op": "Shape",
+                "input0": "default_policy/add"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Sub",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236543,
+            "dur": 4,
+            "args": {
+                "name": "default_policy/sub",
+                "op": "Sub",
+                "input0": "default_policy/add",
+                "input1": "default_policy/split"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/add",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236541,
+            "id": 25
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/add",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236543,
+            "id": 25
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/split",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236518,
+            "id": 26
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/split",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236543,
+            "id": 26
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_Retval",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236547,
+            "dur": 0,
+            "args": {
+                "name": "_retval_default_policy/add_0_2",
+                "op": "_Retval",
+                "input0": "default_policy/add"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "RealDiv",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236548,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/truediv",
+                "op": "RealDiv",
+                "input0": "default_policy/sub",
+                "input1": "default_policy/Exp"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/sub",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236547,
+            "id": 27
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/sub",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236548,
+            "id": 27
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/Exp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236526,
+            "id": 28
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/Exp",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236548,
+            "id": 28
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Square",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236552,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/Square",
+                "op": "Square",
+                "input0": "default_policy/truediv"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "StridedSlice",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236548,
+            "dur": 7,
+            "args": {
+                "name": "default_policy/strided_slice",
+                "op": "StridedSlice",
+                "input0": "default_policy/Shape_1",
+                "input1": "default_policy/strided_slice/stack",
+                "input2": "default_policy/strided_slice/stack_1",
+                "input3": "default_policy/strided_slice/stack"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/Shape_1",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236545,
+            "id": 29
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/Shape_1",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236548,
+            "id": 29
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236373,
+            "id": 30
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236548,
+            "id": 30
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack_1",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236385,
+            "id": 31
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack_1",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236548,
+            "id": 31
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236373,
+            "id": 32
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/strided_slice/stack",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236548,
+            "id": 32
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Sum",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236556,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/Sum",
+                "op": "Sum",
+                "input0": "default_policy/Square",
+                "input1": "default_policy/strided_slice/stack"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Cast",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236557,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/ToFloat",
+                "op": "Cast",
+                "input0": "default_policy/strided_slice"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Mul",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236561,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/mul_1",
+                "op": "Mul",
+                "input0": "default_policy/Sum",
+                "input1": "default_policy/mul_1/x"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/mul_1/x",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236389,
+            "id": 33
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/mul_1/x",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236561,
+            "id": 33
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Mul",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236562,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/mul_2",
+                "op": "Mul",
+                "input0": "default_policy/ToFloat",
+                "input1": "default_policy/mul_2/x"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/mul_2/x",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236369,
+            "id": 34
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/mul_2/x",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236562,
+            "id": 34
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Sub",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236565,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/sub_1",
+                "op": "Sub",
+                "input0": "default_policy/mul_1",
+                "input1": "default_policy/mul_2"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/mul_2",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236564,
+            "id": 35
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/mul_2",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236565,
+            "id": 35
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Sub",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236569,
+            "dur": 2,
+            "args": {
+                "name": "default_policy/sub_2",
+                "op": "Sub",
+                "input0": "default_policy/sub_1",
+                "input1": "default_policy/Sum_1"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/Sum_1",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236534,
+            "id": 36
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/Sum_1",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236569,
+            "id": 36
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_Retval",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236572,
+            "dur": 1,
+            "args": {
+                "name": "_retval_default_policy/sub_2_0_4",
+                "op": "_Retval",
+                "input0": "default_policy/sub_2"
+            }
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "Exp",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236572,
+            "dur": 3,
+            "args": {
+                "name": "default_policy/Exp_1",
+                "op": "Exp",
+                "input0": "default_policy/sub_2"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/sub_2",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236571,
+            "id": 37
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/sub_2",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236572,
+            "id": 37
+        },
+        {
+            "ph": "X",
+            "cat": "Op",
+            "name": "_Retval",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236576,
+            "dur": 2,
+            "args": {
+                "name": "_retval_default_policy/Exp_1_0_0",
+                "op": "_Retval",
+                "input0": "default_policy/Exp_1"
+            }
+        },
+        {
+            "ph": "s",
+            "cat": "DataFlow",
+            "name": "default_policy/Exp_1",
+            "pid": 3,
+            "tid": 1,
+            "ts": 1575270405236575,
+            "id": 38
+        },
+        {
+            "ph": "t",
+            "cat": "DataFlow",
+            "name": "default_policy/Exp_1",
+            "pid": 3,
+            "tid": 0,
+            "ts": 1575270405236576,
+            "id": 38
+        }
+    ]
+}

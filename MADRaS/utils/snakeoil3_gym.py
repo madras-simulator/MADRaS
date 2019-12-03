@@ -324,7 +324,7 @@ class Client(object):
             elif '***shutdown***' in sockdata:
                 print("[{}]: Server has stopped the race on {}. "
                       "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
-                self.shutdown()
+                # self.shutdown() # AS: commenting because eval crashes after the agent completes one lap
                 return -1
             elif '***restart***' in sockdata:
                 # What do I do here?

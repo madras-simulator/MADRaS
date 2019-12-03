@@ -59,12 +59,19 @@ class TorcsDone(MadrasDone):
 
 class RaceOver(MadrasDone):
     """Terminates episode when the agent has finishes one lap."""
+    def __init__(self):
+        self.num_steps = 0
+
     def check_done(self, game_config, game_state):
+        self.num_steps += 1
         if game_state["distance_traversed"] >= game_config.track_len:
-            print("Done: Race over!")
+            print("Done: Race over in {} steps!".format(self.num_steps))
             return True
         else:
             return False
+
+    def reset(self):
+        self.num_steps = 0
 
 
 class TimeOut(MadrasDone):
@@ -92,11 +99,13 @@ class TimeOut(MadrasDone):
 class Collision(MadrasDone):
     def __init__(self):
         self.damage = 0.0
+        self.num_steps = 0
 
     def check_done(self, game_config, game_state):
         del game_config
+        self.num_steps += 1
         if self.damage < game_state["damage"]:
-            print("Done: Episode terminated because agent collided.")
+            print("Done: Episode terminated because agent collided after {} steps.".format(self.num_steps))
             self.damage = 0.0
             return True
         else:
@@ -104,17 +113,24 @@ class Collision(MadrasDone):
 
     def reset(self):
         self.damage = 0.0
+        self.num_steps = 0
 
 
 class TurnBackward(MadrasDone):
+    def __init__(self):
+        self.num_steps = 0
+
     def check_done(self, game_config, game_state):
         del game_config
+        self.num_steps += 1
         if np.cos(game_state["angle"]) < 0:
-            print("Done: Episode terminated because agent turned backward.")
+            print("Done: Episode terminated because agent turned backward after {} steps.".format(self.num_steps))
             return True
         else:
             return False
 
+    def reset(self):
+        self.num_steps = 0
 
 class OutOfTrack(MadrasDone):
     def __init__(self):

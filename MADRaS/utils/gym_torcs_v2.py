@@ -25,7 +25,8 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3, name='MadrasAgent'):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3, name='MadrasAgent', debug=False):
+        self.debug = debug
         self.name = name
         self.vision = vision
         self.throttle = throttle
@@ -59,7 +60,8 @@ class TorcsEnv:
 
 
     def step(self, step, client, u, early_stop=1):
-        print("In STEP of {}: My server is {}".format(self.name, client.serverPID))
+        if self.debug:
+            print("In STEP of {}: My server is {}".format(self.name, client.serverPID))
         reward = 0
         this_action = self.agent_to_torcs(u)
 

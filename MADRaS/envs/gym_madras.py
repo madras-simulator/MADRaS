@@ -301,7 +301,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
             done = self.done_manager.get_done_signal(self._config, game_state)
             if done:
                 self.client.R.d["meta"] = True  # Terminate the episode
-                print('Terminating PID {}'.format(self.client.serverPID))
                 break
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)

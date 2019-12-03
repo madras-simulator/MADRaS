@@ -1,5 +1,5 @@
 torcs_server_port: 60934
-visualise: True  # whether to render TORCS window
+visualise: False  # whether to render TORCS window
 no_of_visualisations: 1  # To visualize multiple training instances (under MPI) in parallel set it to more than 1
 track_len: 2843.10  # in metres. CG Track 3. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
 max_steps: 20000  # max episode length
@@ -124,24 +124,82 @@ agents:
         - Collision
         - TurnBackward
         - OutOfTrack
+  # - MadrasAgent:
+  #     vision: False  # whether to use vision input
+  #     throttle: True
+  #     gear_change: False
+  #     client_max_steps: -1  # to be interpreted as np.inf
+  #     target_speed: 12.89  # metres per sec
+  #     state_dim: 24
+  #     early_stop: True
+  #     normalize_actions: True  # all actions in [-1, 1]
+  #     # PID params
+  #     pid_assist: True
+  #     pid_settings:
+  #       accel_pid:
+  #         - 10.5  # a_x
+  #         - 0.05  # a_y
+  #         - 2.8   # a_z
+  #       steer_pid:
+  #         - 5.1
+  #         - 0.001
+  #         - 0.000001
+  #       accel_scale: 1.0
+  #       steer_scale: 0.1
+  #       pid_latency: 10
+
+  #     # Observation mode
+  #     observations:
+  #       mode: SingleAgentSimpleLapObs
+  #       normalize: False  # gym_torcs normalizes by default
+  #       obs_min:
+  #         angle: -3.142
+  #         track: 0.0
+  #         trackPos: -1.0
+  #       obs_max:
+  #         angle: 3.142
+  #         track: 200.0
+  #         trackPos: 1.0
+
+  #     # Reward function
+  #     rewards:
+  #       ProgressReward3:
+  #         scale: 1.0
+  #       AvgSpeedReward:
+  #         scale: 1.0
+  #       CollisionPenalty:
+  #         scale: 10.0
+  #       TurnBackwardPenalty:
+  #         scale: 10.0
+  #       AngAcclPenalty:
+  #         scale: 1.0
+  #         max_ang_accl: 2.0
+
+  #     # Done function
+  #     dones:
+  #       - RaceOver
+  #       - TimeOut
+  #       - Collision
+  #       - TurnBackward
+  #       - OutOfTrack
 
 # Traffic agents
-traffic:
-  - ConstVelTrafficAgent:
-      target_speed: 30
-      target_lane_pos: -0.5
-      collision_time_window: 1  # second
-      pid_settings:
-        accel_pid:
-          - 10.5  # a_x
-          - 0.05  # a_y
-          - 2.8   # a_z
-        steer_pid:
-          - 5.1
-          - 0.001
-          - 0.000001
-        accel_scale: 1.0
-        steer_scale: 0.1
+# traffic:
+#   - ConstVelTrafficAgent:
+#       target_speed: 30
+#       target_lane_pos: -0.5
+#       collision_time_window: 1  # second
+#       pid_settings:
+#         accel_pid:
+#           - 10.5  # a_x
+#           - 0.05  # a_y
+#           - 2.8   # a_z
+#         steer_pid:
+#           - 5.1
+#           - 0.001
+#           - 0.000001
+#         accel_scale: 1.0
+#         steer_scale: 0.1
   # - SinusoidalSpeedAgent:
   #     speed_amplitude: 50
   #     speed_time_period: 1000

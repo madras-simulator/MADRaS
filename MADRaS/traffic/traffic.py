@@ -66,11 +66,12 @@ class MadrasTrafficAgent(object):
         while self.ob is None:
             print("{} Still waiting for observation".format(self.name))
             try:
-                self.client = snakeoil3.Client(p=self.port,
-                                               vision=(self.cfg["vision"] if "vision" in self.cfg else False),
-                                               visualise=(self.cfg["visualise"] if "visualise" in self.cfg else False),
-                                               name=self.name
-                                              )
+                self.client = snakeoil3.Client(
+                    p=self.port,
+                    vision=(self.cfg["vision"] if "vision" in self.cfg else False),
+                    visualise=(self.cfg["visualise"] if "visualise" in self.cfg else False),
+                    name=self.name
+                    )
                 # Open new UDP in vtorcs
                 self.client.MAX_STEPS = self.cfg["client_max_steps"] if "client_max_steps" in self.cfg else np.inf
                 self.client.get_servers_input(0)

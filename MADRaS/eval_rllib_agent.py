@@ -22,6 +22,6 @@ gym.envs.register(
 import os
 
 
-CHECKPOINT = "/home/anirban/ray_results/PPO_madras_env_2019-11-25_06-27-50_5vvrz0n/checkpoint_511/checkpoint-511"
+CHECKPOINT = "/home/anirban/ray_results/PPO_madras_env_2019-12-03_10-11-12ek55po4b/checkpoint_1734/checkpoint-1734"
 os.system("rllib rollout {} --env Madras-v0 --steps 1000000 --run PPO --no-render".format(CHECKPOINT))
 os.system("pkill torcs")
