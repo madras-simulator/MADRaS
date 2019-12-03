@@ -1,16 +1,20 @@
-port: 60934
+torcs_server_port: 60934
 vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
 visualise: False  # whether to render TORCS window
-no_of_visualisations: 1
-track_len: 7014.6
+no_of_visualisations: 1  # To visualize multiple training instances (under MPI) in parallel set it to more than 1
+track_len: 2843.10  # in metres. CG Track 3. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
+max_steps: 20000  # max episode length
+track_width: 10.0
+target_speed: 13.89  # metres per sec
 state_dim: 29
 early_stop: True
+normalize_actions: True  # all actions in [-1, 1]
 
 # PID params
-pid_assist: False
+pid_assist: True
 pid_settings:
   accel_pid:
     - 10.5  # a_x
@@ -25,16 +29,102 @@ pid_settings:
   pid_latency: 10
 
 # Observation mode
-observations: "'TorcsObs'"
+observations:
+  mode: SingleAgentSimpleLapObs
+  normalize: False  # gym_torcs normalizes by default
+  obs_min:
+    angle: -3.142
+    track: 0.0
+    trackPos: -1.0
+  obs_max:
+    angle: 3.142
+    track: 200.0
+    trackPos: 1.0
 
 # Reward function
 rewards:
-  TorcsReward:
+  ProgressReward3:
     scale: 1.0
-  ProgressReward:
+  AvgSpeedReward:
     scale: 1.0
+  CollisionPenalty:
+    scale: 10.0
+  TurnBackwardPenalty:
+    scale: 10.0
+  AngAcclPenalty:
+    scale: 1.0
+    max_ang_accl: 2.0
 
 # Done function
 dones:
-  - TorcsDone
   - RaceOver
+  - TimeOut
+  - Collision
+  - TurnBackward
+  - OutOfTrack
+
+# Traffic agents
+traffic:
+  - ConstVelTrafficAgent:
+      target_speed: 50
+      target_lane_pos: -0.5
+      collision_time_window: 1  # second
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - SinusoidalSpeedAgent:
+      speed_amplitude: 50
+      speed_time_period: 1000
+      target_lane_pos: -0.25
+      collision_time_window: 1  # second
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - RandomLaneSwitchAgent:
+      target_speed: 100
+      collision_time_window: 1  # second
+      lane_change_interval: 5  # seconds
+      min_safe_dist: 0.5  # meters
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - RandomStoppingAgent:
+      target_speed: 50
+      target_lane_pos: 0.5
+      max_stop_duration: 5  #steps
+      collision_time_window: 1  # second
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1

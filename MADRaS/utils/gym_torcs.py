@@ -13,10 +13,10 @@ import collections as col
 from gym import spaces
 import numpy as np
 import copy
-import MADRaS.utils.snakeoil3_gym as snakeoil3
-from MADRaS.utils.madras_datatypes import Madras
+import utils.snakeoil3_gym as snakeoil3
+import utils.madras_datatypes as md
 
-madras = Madras()
+madras = md.MadrasDatatypes()
 
 
 class TorcsEnv:
@@ -25,7 +25,8 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, name='MadrasAgent'):
+        self.name = name
         self.vision = vision
         self.throttle = throttle
         self.gear_change = gear_change
@@ -121,7 +122,6 @@ class TorcsEnv:
             client.R.d['meta'] = True
             print('Terminating because server stopped responding')
             return obs_pre, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
-            # return None, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
 
         # Get the current full-observation from torcs
         obs = client.S.d
@@ -151,39 +151,28 @@ class TorcsEnv:
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
             reward = -200
             episode_terminate = True
-            client.R.d['meta'] = True
-            print('Terminating because Out of Track')
 
         if np.cos(obs['angle']) < 0: # Episode is terminated if the agent runs backward
             episode_terminate = True
-            client.R.d['meta'] = True
-            print('Terminating because agent Turned Back')
 
-
-        if client.R.d['meta'] is True: # Send a reset signal
+        if episode_terminate:
             self.initial_run = False
-            print('Terminating PID {}'.format(client.serverPID))
-            # client.respond_to_server()
-            #self.reset(client)
 
         self.time_step += 1
-        return self.observation, reward, client.R.d['meta'], {}
+        return self.observation, reward, episode_terminate, {}
 
 
     def reset(self, client, relaunch=True):        
         self.time_step = 0
         self.port = client.port
         if self.initial_reset is not True:
-            # client.R.d['meta'] = True
-            # client.respond_to_server()
-
             ## TENTATIVE. Restarting TORCS every episode suffers the memory leak bug!
             if relaunch is True:
                 self.reset_torcs(client)
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
-        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations)  # Open new UDP in vtorcs
+        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations, name=self.name)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
         # client = self.client
@@ -263,11 +252,11 @@ class TorcsEnv:
                      'track', 
                      'trackPos',
                      'wheelSpinVel']
-            Observation = col.namedtuple('Observaion', names)
+            Observation = col.namedtuple('Observation', names)
             return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
-                               speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/300.0,
-                               speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/300.0,
-                               speedZ=np.array(raw_obs['speedZ'], dtype=madras.floatX)/300.0,
+                               speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/self.default_speed,
+                               speedY=np.array(raw_obs['speedY'], dtype=madras.floatX)/self.default_speed,
+                               speedZ=np.array(raw_obs['speedZ'], dtype=madras.floatX)/self.default_speed,
                                angle=np.array(raw_obs['angle'], dtype=madras.floatX)/3.1416,
                                damage=np.array(raw_obs['damage'], dtype=madras.floatX),
                                opponents=np.array(raw_obs['opponents'], dtype=madras.floatX)/200.,
@@ -284,7 +273,7 @@ class TorcsEnv:
                      'trackPos',
                      'wheelSpinVel',
                      'img']
-            Observation = col.namedtuple('Observaion', names)
+            Observation = col.namedtuple('Observation', names)
 
             # Get RGB from observation
             image_rgb = self.obs_vision_to_image_rgb(raw_obs[names[8]])
