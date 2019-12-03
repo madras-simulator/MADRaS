@@ -13,8 +13,8 @@ import collections as col
 from gym import spaces
 import numpy as np
 import copy
-import utils.snakeoil3_gym as snakeoil3
-import utils.madras_datatypes as md
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+import MADRaS.utils.madras_datatypes as md
 
 madras = md.MadrasDatatypes()
 

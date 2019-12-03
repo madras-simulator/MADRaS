@@ -27,12 +27,15 @@ import time
 from mpi4py import MPI
 import socket
 import yaml
-import envs.reward_manager as rm
-import envs.done_manager as dm
-import envs.observation_manager as om
-import traffic.traffic as traffic
+import MADRaS.envs.reward_manager as rm
+import MADRaS.envs.done_manager as dm
+import MADRaS.envs.observation_manager as om
+import MADRaS.traffic.traffic as traffic
 
-DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options.yml"
+path_and_file = os.path.realpath(__file__)
+path, file = os.path.split(path_and_file)
+DEFAULT_SIM_OPTIONS_FILE = os.path.join(path, "data", "sim_options.yml")
+
 
 class MadrasConfig(object):
     """Configuration class for MADRaS Gym environment."""

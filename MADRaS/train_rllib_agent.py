@@ -1,7 +1,7 @@
 import ray
 import ray.rllib.agents.ppo as ppo
 from ray.tune.logger import pretty_print
-import rllib_helpers as helpers
+import MADRaS.rllib_helpers as helpers
 
 
 helpers.register_madras()

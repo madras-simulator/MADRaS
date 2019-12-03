@@ -1,6 +1,6 @@
 import numpy as np
 from gym import spaces
-import utils.madras_datatypes as md
+import MADRaS.utils.madras_datatypes as md
 
 MadrasDatatypes = md.MadrasDatatypes()
 
