@@ -16,8 +16,8 @@ import math
 from copy import deepcopy
 import numpy as np
 import utils.snakeoil3_gym as snakeoil3
-from utils.gym_torcs import TorcsEnv
-from controllers.pid import PIDController
+from MADRaS.utils.gym_torcs import TorcsEnv
+from MADRaS.controllers.pid import PIDController
 import gym
 from gym.utils import seeding
 import os

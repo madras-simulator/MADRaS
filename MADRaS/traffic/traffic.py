@@ -1,8 +1,8 @@
 import numpy as np
-from utils.gym_torcs import TorcsEnv
-import utils.snakeoil3_gym as snakeoil3
-from controllers.pid import PIDController
-import utils.madras_datatypes as md
+from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.controllers.pid import PIDController
+import MADRaS.utils.madras_datatypes as md
 from multiprocessing import Process
 
 MadrasDatatypes = md.MadrasDatatypes()

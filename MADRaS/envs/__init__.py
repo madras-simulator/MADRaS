@@ -1,2 +1,2 @@
 """Env Import."""
-from envs.gym_madras import MadrasEnv
+from MADRaS.envs.gym_madras import MadrasEnv
