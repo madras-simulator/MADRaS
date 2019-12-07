@@ -3,7 +3,7 @@ vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
-visualise: True  # whether to render TORCS window
+visualise: False  # whether to render TORCS window
 no_of_visualisations: 1  # To visualize multiple training instances (under MPI) in parallel set it to more than 1
 track_len: 5784.10  # in metres. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
 max_steps: 1000 #40000 #15000 #20000  # max episode length

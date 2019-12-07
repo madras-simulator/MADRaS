@@ -12,7 +12,7 @@ def test_madras_vanilla():
           " Verify if the number of dimensions {} is right.".format(obs, len(obs)))
     print("Testing step...")
     for t in range(20000):
-        obs, r, done, _ = env.step([0.0, 1.0, -1.0])
+        obs, r, done, _ = env.step([-1.0, 1.0, -1.0])
         print("{}: reward={}, done={}".format(t, r, done))
         if done:
         # if t > 0 and t%1000 == 0:
@@ -36,5 +36,5 @@ def test_madras_pid():
 
 
 if __name__=='__main__':
-    # test_madras_vanilla()
-    test_madras_pid()
+    test_madras_vanilla()
+    # test_madras_pid()

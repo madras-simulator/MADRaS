@@ -151,9 +151,11 @@ class TorcsEnv:
         episode_terminate = False
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
             reward = -200
+            print("{} is out of track.".format(self.name))
             episode_terminate = True
 
-        if np.cos(obs['angle']) < 0: # Episode is terminated if the agent runs backward
+        if np.cos(obs['angle']) < 0: # Episode is terminated if the agent turns backward
+            print("{} turns backward".format(self.name))
             episode_terminate = True
 
         if episode_terminate:

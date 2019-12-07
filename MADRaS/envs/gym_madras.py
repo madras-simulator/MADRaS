@@ -318,7 +318,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
     def step(self, action):
         self.step_num += 1
-        print("Step num: {}".format(self.step_num))
+        # print("Step num: {} Action: ".format(self.step_num), action)
         if self._config.pid_assist:
             return self.step_pid(action)
         else:
