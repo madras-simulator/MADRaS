@@ -14,8 +14,8 @@ def test_madras_vanilla():
     for t in range(20000):
         obs, r, done, _ = env.step([0.0, 1.0, -1.0])
         print("{}: reward={}, done={}".format(t, r, done))
-        # if done:
-        if t%100 == 0:
+        if done:
+        # if t > 0 and t%1000 == 0:
             env.reset()
     os.system("pkill torcs")
 

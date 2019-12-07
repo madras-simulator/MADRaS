@@ -25,7 +25,7 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, name='MadrasAgent'):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, torcs_server_port=3001, name='MadrasAgent'):
         self.name = name
         self.vision = vision
         self.throttle = throttle
@@ -37,6 +37,7 @@ class TorcsEnv:
         self.time_step = 0
         self.currState = None 
         self.no_of_visualisations = no_of_visualisations
+        self.torcs_server_port = torcs_server_port
         if throttle is False:                           # Throttle is generally True
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
         else:
@@ -198,7 +199,8 @@ class TorcsEnv:
         return self.observation
 
     def reset_torcs(self,client):
-        print("relaunch torcs in gym_torcs on port{}".format(client.port))
+        # print("relaunch torcs in gym_torcs on port{}".format(client.port))
+        print("relaunch torcs in gym_torcs on port{}".format(self.torcs_server_port))
         
         command = 'kill {}'.format(client.serverPID)
         os.system(command)
@@ -208,9 +210,11 @@ class TorcsEnv:
         command = None
         rank = MPI.COMM_WORLD.Get_rank()        
         if rank < self.no_of_visualisations and self.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(client.port)
+            # command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.torcs_server_port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+            # command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self.vision is True:
             command += ' -vision'
 
@@ -251,7 +255,8 @@ class TorcsEnv:
                      'rpm',
                      'track', 
                      'trackPos',
-                     'wheelSpinVel']
+                     'wheelSpinVel',
+                     'distFromStart']
             Observation = col.namedtuple('Observation', names)
             return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
                                speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/self.default_speed,
@@ -263,7 +268,9 @@ class TorcsEnv:
                                rpm=np.array(raw_obs['rpm'], dtype=madras.floatX)/10000,
                                track=np.array(raw_obs['track'], dtype=madras.floatX)/200.,
                                trackPos=np.array(raw_obs['trackPos'], dtype=madras.floatX)/1.,
-                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=madras.floatX))
+                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=madras.floatX),
+                               distFromStart=np.array(raw_obs['distFromStart'], dtype=madras.floatX)
+                               )
         else:
             names = ['focus',
                      'speedX', 'speedY', 'speedZ', 'angle',

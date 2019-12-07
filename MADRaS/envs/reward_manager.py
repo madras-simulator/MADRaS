@@ -154,3 +154,21 @@ class AngAcclPenalty(MadrasReward):
             reward = 0
         self.prev_angles = self.prev_angles[1:]
         return reward
+
+
+class SuccessfulOvertakeReward(MadrasReward):
+    def __init__(self, cfg):
+        self.rank = np.inf
+        super(SuccessfulOvertakeReward, self).__init__(cfg)
+
+    def reset(self):
+        self.rank = np.inf
+
+    def compute_reward(self, game_config, game_state):
+        reward = 0.0
+        if math.isinf(self.rank):  # very fist step
+            self.rank = game_state["racePos"]
+        elif game_state["racePos"] < self.rank:
+            self.rank = game_state["racePos"]
+            reward = self.cfg["scale"]
+        return reward

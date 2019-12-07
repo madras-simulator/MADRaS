@@ -95,6 +95,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
     """Definition of the Gym Madras Environment."""
     def __init__(self, cfg_path=None):
         # If `visualise` is set to False torcs simulator will run in headless mode
+        self.step_num = 0
         self._config = MadrasConfig()
         self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None
@@ -107,12 +108,19 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
 
+        self.num_traffic_agents = len(self._config.traffic) if self._config.traffic else 0
+        if self._config.traffic:
+            self.traffic_manager = traffic.MadrasTrafficManager(
+                self._config.torcs_server_port, 1, self._config.traffic)
+        self.madras_agent_port = self._config.torcs_server_port + self.num_traffic_agents
+
         TorcsEnv.__init__(self,
                           vision=self._config.vision,
                           throttle=self._config.throttle,
                           gear_change=self._config.gear_change,
                           visualise=self._config.visualise,
-                          no_of_visualisations=self._config.no_of_visualisations)
+                          no_of_visualisations=self._config.no_of_visualisations,
+                          torcs_server_port=self._config.torcs_server_port)
 
         if self._config.normalize_actions:
             self.action_space = gym.spaces.Box(low=-np.ones(3), high=np.ones(3))
@@ -128,9 +136,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.ob = None
         self.seed()
         self.start_torcs_process()
-        if self._config.traffic:
-            self.traffic_manager = traffic.MadrasTrafficManager(
-                self._config.torcs_server_port, 1, self._config.traffic)
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -178,6 +184,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
     def reset(self):
         """Reset Method to be called at the end of each episode."""
+        self.step_num = 0
         if self._config.traffic:
             self.traffic_manager.reset()
 
@@ -214,7 +221,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         while self.ob is None:
             print("{} Still waiting for observation".format(self.name))
             try:
-                self.client = snakeoil3.Client(p=self._config.torcs_server_port,
+                self.client = snakeoil3.Client(p=self.madras_agent_port, # self._config.torcs_server_port,
                                                vision=self._config.vision,
                                                visualise=self._config.visualise)
                 # Open new UDP in vtorcs
@@ -249,6 +256,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                       "angle": self.client.S.d["angle"],
                       "damage": self.client.S.d["damage"],
                       "trackPos": self.client.S.d["trackPos"],
+                      "racePos": self.client.S.d["racePos"],
                       "track": self.client.S.d["track"]}
         reward = self.reward_manager.get_reward(self._config, game_state)
 
@@ -294,6 +302,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           "angle": self.client.S.d["angle"],
                           "damage": self.client.S.d["damage"],
                           "trackPos": self.client.S.d["trackPos"],
+                          "racePos": self.client.S.d["racePos"],
                           "track": self.client.S.d["track"]}
             reward += self.reward_manager.get_reward(self._config, game_state)
             if self._config.pid_assist:
@@ -308,6 +317,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
         return next_obs, reward, done, info
 
     def step(self, action):
+        self.step_num += 1
+        print("Step num: {}".format(self.step_num))
         if self._config.pid_assist:
             return self.step_pid(action)
         else:

@@ -4,6 +4,7 @@ import utils.snakeoil3_gym as snakeoil3
 from controllers.pid import PIDController
 import utils.madras_datatypes as md
 from multiprocessing import Process
+from time import time
 
 MadrasDatatypes = md.MadrasDatatypes()
 
@@ -12,11 +13,12 @@ class MadrasTrafficManager(object):
     def __init__(self, torcs_server_port, num_learning_agents, cfg):
         self.traffic_agents = {}
         self.traffic_processes = []
+        self.num_episodes_of_training = 0
         for i, agent in enumerate(cfg):
             agent_type = [x for x in agent.keys()][0]  # TODO(santara): find a better way of extracting key from a dictionary with a single entry
             agent_config = agent[agent_type]
             agent_name = '{}_{}'.format(agent_type, i)
-            agent_port = torcs_server_port + i + num_learning_agents
+            agent_port = torcs_server_port + i #+ num_learning_agents
             try:
                 exec("self.traffic_agents['{}'] = {}({}, {}, '{}')".format(
                     agent_name, agent_type, agent_port, agent_config, agent_name))
@@ -28,8 +30,9 @@ class MadrasTrafficManager(object):
         return self.traffic_agents
 
     def flag_off_traffic(self):
-        for agent in self.traffic_agents.values():
-            self.traffic_processes.append(Process(target=agent.flag_off))
+        self.num_episodes_of_training += 1
+        for i, agent in enumerate(self.traffic_agents.values()):
+            self.traffic_processes.append(Process(target=agent.flag_off, args=(i+self.num_episodes_of_training,)))
         for traffic_process in self.traffic_processes:
             traffic_process.start()
 
@@ -85,7 +88,8 @@ class MadrasTrafficAgent(object):
     def get_action(self):
         raise NotImplementedError("Successor classes must implement this method")
 
-    def flag_off(self, sleep=0):
+    def flag_off(self, random_seed=0):
+        del random_seed
         self.wait_for_observation()
         print("[{}]: My server is at {}".format(self.name, self.client.serverPID))
         self.is_alive = True
@@ -209,4 +213,44 @@ class RandomStoppingAgent(MadrasTrafficAgent):
         else:
             self.brake = 1
             self.stopped_for -= 1
+        return np.asarray([self.steer, self.accel, self.brake])
+
+
+
+class ParkedAgent(MadrasTrafficAgent):
+    def __init__(self, port, cfg, name):
+        super(ParkedAgent, self).__init__(port, cfg, name)
+        self.target_speed = cfg["target_speed"]/self.env.default_speed
+
+    def flag_off(self, random_seed=0):
+        self.time = time()
+        np.random.seed(random_seed)
+        parking_lane_pos_range = (self.cfg["parking_lane_pos"]["high"] -
+                                  self.cfg["parking_lane_pos"]["low"])
+        self.parking_lane_pos = (self.cfg["parking_lane_pos"]["low"] +
+                                 np.random.random()*parking_lane_pos_range)
+        parking_dist_range = (self.cfg["parking_dist_from_start"]["high"] -
+                              self.cfg["parking_dist_from_start"]["low"])
+        self.parking_dist_from_start = (self.cfg["parking_dist_from_start"]["low"] +
+                                        np.random.random()*parking_dist_range)
+        self.behind_finish_line = True
+        self.prev_dist_from_start = 0
+        self.parked = False
+        super(ParkedAgent, self).flag_off()
+
+    def get_action(self):
+        self.distance_from_start = self.ob.distFromStart
+        if self.distance_from_start < self.prev_dist_from_start:
+            self.behind_finish_line = False
+        if not self.behind_finish_line and self.distance_from_start >= self.parking_dist_from_start:
+            self.steer, self.accel, self.brake = 0.0, 0.0, 1.0
+            if not self.parked:
+                print("{} parked at lanepos: {}, distFromStart: {} after time {} sec".format(
+                    self.name, self.parking_lane_pos, self.parking_dist_from_start, time()-self.time))
+                self.parked = True
+        else:
+            action = self.PID_controller.get_action([self.parking_lane_pos, self.target_speed])
+            self.steer, self.accel, self.brake = action[0], action[1], action[2]
+            self.avoid_impending_collision()
+        self.prev_dist_from_start = self.distance_from_start
         return np.asarray([self.steer, self.accel, self.brake])

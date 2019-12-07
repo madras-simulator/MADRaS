@@ -148,3 +148,20 @@ class OutOfTrack(MadrasDone):
 
     def reset(self):
         self.num_steps = 0
+
+class Rank1(MadrasDone):
+    def __init__(self):
+        self.num_steps = 0
+
+    def check_done(self, game_config, game_state):
+        self.num_steps += 1
+        if game_state["racePos"] == 1:
+            print("Done: Episode terminated because agent"
+                  " is Rank 1 after {} steps.".format(self.num_steps))
+            self.num_steps = 0
+            return True
+        else:
+            return False
+
+    def reset(self):
+        self.num_steps = 0
