@@ -29,6 +29,11 @@ trainer = ppo.PPOTrainer(config=config, env="madras_env")
 # Good Spring checkpoint
 # trainer.restore('/home/anirban/ray_results/PPO_madras_env_2019-12-04_09-37-1648nnevup/checkpoint_1802/checkpoint-1802')
 # Trying to solve the issue of crash at 15813-15817 step range which never seems to appear during training
+
+# Ckpt for Single agent in Parking traffic - 5 agents: agent starts in the left lane and swerves to the left
+# trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_14-56-5056r5q6ag/checkpoint_111/checkpoint-111")
+# Training with 6 Parking traffic agents: agent starts in the right lane - maybe it will learn to swerve right this time
+trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_16-51-37qf6iw7im/checkpoint_122/checkpoint-122")
 for i in range(10000):
    # Perform one iteration of training the policy with PPO
    result = trainer.train()

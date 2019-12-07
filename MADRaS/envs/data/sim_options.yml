@@ -74,6 +74,26 @@ traffic:
         low: -0.6
         high: 0.0
       parking_dist_from_start:
+        low: 125
+        high: 140
+      collision_time_window: 1.2
+      pid_settings:
+        accel_pid:
+          - 10.5  # a_x
+          - 0.05  # a_y
+          - 2.8   # a_z
+        steer_pid:
+          - 5.1
+          - 0.001
+          - 0.000001
+        accel_scale: 1.0
+        steer_scale: 0.1
+  - ParkedAgent:
+      target_speed: 50
+      parking_lane_pos:
+        low: -0.6
+        high: 0.0
+      parking_dist_from_start:
         low: 100
         high: 120
       collision_time_window: 1.2
