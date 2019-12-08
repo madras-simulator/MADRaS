@@ -8,5 +8,4 @@ setup(name='MADRaS',
                         'pyyaml',
                         'pTable',
                         'matplotlib',
-                        'mpi4py',
-                        'tensorflow'])
+                        'mpi4py'])

@@ -15,7 +15,7 @@ The following enhancements were made for Multi-agent synchronization using excep
 import math
 from copy import deepcopy
 import numpy as np
-import utils.snakeoil3_gym as snakeoil3
+import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.utils.gym_torcs import TorcsEnv
 from MADRaS.controllers.pid import PIDController
 import gym
