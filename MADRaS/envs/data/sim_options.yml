@@ -1,12 +1,22 @@
 torcs_server_port: 60934
+server_config:
+  max_cars: 10
+  track_names:
+    - forza
+    - aalborg
+    - alpine-1
+    - alpine-2
+  distance_to_start: 25
+  torcs_server_config_path: /home/anirban/.torcs/config/raceman/  # This must be the value for TORCS with rendering on
+
 vision: False  # whether to use vision input
 throttle: True
 gear_change: False
 client_max_steps: -1  # to be interpreted as np.inf
-visualise: True  # whether to render TORCS window
+visualise: False  # whether to render TORCS window
 no_of_visualisations: 1  # To visualize multiple training instances (under MPI) in parallel set it to more than 1
 track_len: 5784.10  # in metres. All track lengths can be found here: http://www.berniw.org/trb/tracks/tracklist.php
-max_steps: 5000 #40000 #15000 #20000  # max episode length
+max_steps: 1000 #40000 #15000 #20000  # max episode length
 track_width: 11.0
 target_speed: 13.89 #27.78  # metres per sec
 state_dim: 29
@@ -14,7 +24,7 @@ early_stop: True
 normalize_actions: True  # all actions in [-1, 1]
 
 # PID params
-pid_assist: False
+pid_assist: True
 pid_settings:
   accel_pid:
     - 10.5  # a_x

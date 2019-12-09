@@ -15,6 +15,8 @@ import numpy as np
 import copy
 import utils.snakeoil3_gym as snakeoil3
 import utils.madras_datatypes as md
+import logging
+logger = logging.getLogger(__name__)
 
 madras = md.MadrasDatatypes()
 
@@ -53,12 +55,6 @@ class TorcsEnv:
             high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255], dtype=madras.floatX)
             low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0], dtype=madras.floatX)
             self.observation_space = spaces.Box(low=low, high=high)
-
-
-    def terminate(self):
-        episode_terminate = True
-        # client.R.d['meta'] = True
-        print('Terminating because bad episode')
 
 
     def step(self, step, client, u, early_stop=1):
@@ -121,7 +117,7 @@ class TorcsEnv:
 
         if code==-1:
             client.R.d['meta'] = True
-            print('Terminating because server stopped responding')
+            logging.debug('Terminating because server stopped responding')
             return obs_pre, 0, client.R.d['meta'], {'termination_cause':'hardReset'}
 
         # Get the current full-observation from torcs
@@ -151,11 +147,11 @@ class TorcsEnv:
         episode_terminate = False
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
             reward = -200
-            print("{} is out of track.".format(self.name))
+            logging.debug("{} is out of track.".format(self.name))
             episode_terminate = True
 
         if np.cos(obs['angle']) < 0: # Episode is terminated if the agent turns backward
-            print("{} turns backward".format(self.name))
+            logging.debug("{} turns backward".format(self.name))
             episode_terminate = True
 
         if episode_terminate:
@@ -172,7 +168,7 @@ class TorcsEnv:
             ## TENTATIVE. Restarting TORCS every episode suffers the memory leak bug!
             if relaunch is True:
                 self.reset_torcs(client)
-                print("### TORCS is RELAUNCHED ###")
+                logging.debug("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
         client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations, name=self.name)  # Open new UDP in vtorcs
@@ -202,7 +198,7 @@ class TorcsEnv:
 
     def reset_torcs(self,client):
         # print("relaunch torcs in gym_torcs on port{}".format(client.port))
-        print("relaunch torcs in gym_torcs on port{}".format(self.torcs_server_port))
+        logging.debug("relaunch torcs in gym_torcs on port {}".format(self.torcs_server_port))
         
         command = 'kill {}'.format(client.serverPID)
         os.system(command)

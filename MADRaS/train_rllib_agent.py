@@ -2,6 +2,10 @@ import ray
 import ray.rllib.agents.ppo as ppo
 from ray.tune.logger import pretty_print
 import rllib_helpers as helpers
+import logging
+import logging.config
+import sys
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 helpers.register_madras()

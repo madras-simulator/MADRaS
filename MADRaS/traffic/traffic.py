@@ -5,6 +5,8 @@ from controllers.pid import PIDController
 import utils.madras_datatypes as md
 from multiprocessing import Process
 from time import time
+import logging
+logger = logging.getLogger(__name__)
 
 MadrasDatatypes = md.MadrasDatatypes()
 
@@ -29,10 +31,11 @@ class MadrasTrafficManager(object):
     def get_traffic_agents(self):
         return self.traffic_agents
 
-    def flag_off_traffic(self):
+    def flag_off_traffic(self, num_cars_to_reset):
         self.num_episodes_of_training += 1
         for i, agent in enumerate(self.traffic_agents.values()):
-            self.traffic_processes.append(Process(target=agent.flag_off, args=(i+self.num_episodes_of_training,)))
+            if i < num_cars_to_reset:
+                self.traffic_processes.append(Process(target=agent.flag_off, args=(i+self.num_episodes_of_training,)))
         for traffic_process in self.traffic_processes:
             traffic_process.start()
 
@@ -41,9 +44,9 @@ class MadrasTrafficManager(object):
             traffic_process.terminate()
         self.traffic_processes = []
 
-    def reset(self):
+    def reset(self, num_cars_to_reset):
         self.kill_all_traffic_agents()
-        self.flag_off_traffic()
+        self.flag_off_traffic(num_cars_to_reset)
 
 
 class MadrasTrafficAgent(object):
@@ -67,7 +70,7 @@ class MadrasTrafficAgent(object):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
-            print("{} Still waiting for observation".format(self.name))
+            logging.debug("{} Still waiting for observation".format(self.name))
             try:
                 self.client = snakeoil3.Client(
                     p=self.port,
@@ -91,7 +94,7 @@ class MadrasTrafficAgent(object):
     def flag_off(self, random_seed=0):
         del random_seed
         self.wait_for_observation()
-        print("[{}]: My server is at {}".format(self.name, self.client.serverPID))
+        logging.debug("[{}]: My server is at {}".format(self.name, self.client.serverPID))
         self.is_alive = True
         while True:
             if self.is_alive:
@@ -100,14 +103,14 @@ class MadrasTrafficAgent(object):
                     self.ob, _, done, info = self.env.step(0, self.client, action)
                 
                 except Exception as e:
-                    print("Exception {} caught by {} traffic agent at port {}".format(
-                            str(e), self.name, self.port))
+                    logging.debug("Exception {} caught by {} traffic agent at port {}".format(
+                                  str(e), self.name, self.port))
                     self.wait_for_observation()
                 self.detect_and_prevent_imminent_crash_out_of_track()
                 self.PID_controller.update(self.ob)
                 if done:
                     self.is_alive = False
-                    print("{} died.".format(self.name))
+                    logging.debug("{} died.".format(self.name))
 
     def get_front_opponents(self):
         return np.array([
@@ -240,13 +243,14 @@ class ParkedAgent(MadrasTrafficAgent):
 
     def get_action(self):
         self.distance_from_start = self.ob.distFromStart
-        if self.distance_from_start < self.prev_dist_from_start:
+        if self.distance_from_start + 1 < self.prev_dist_from_start:
             self.behind_finish_line = False
         if not self.behind_finish_line and self.distance_from_start >= self.parking_dist_from_start:
             self.steer, self.accel, self.brake = 0.0, 0.0, 1.0
             if not self.parked:
-                print("{} parked at lanepos: {}, distFromStart: {} after time {} sec".format(
-                    self.name, self.parking_lane_pos, self.parking_dist_from_start, time()-self.time))
+                logging.debug("{} parked at lanepos: {}, distFromStart: {} after time {} sec".format(
+                              self.name, self.parking_lane_pos, self.parking_dist_from_start,
+                              time()-self.time))
                 self.parked = True
         else:
             action = self.PID_controller.get_action([self.parking_lane_pos, self.target_speed])
