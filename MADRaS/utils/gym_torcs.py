@@ -34,7 +34,7 @@ class TorcsEnv:
         self.visualise = visualise
         self.initial_run = True
         self.time_step = 0
-        self.currState = None 
+        self.currState = None      
         self.no_of_visualisations = no_of_visualisations
         if throttle is False:                           # Throttle is generally True
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
@@ -140,16 +140,21 @@ class TorcsEnv:
         rpm = np.array(obs['rpm'])
 
         progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) - sp * np.abs(obs['trackPos'])
+        # progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) 
+        progress = 0
         reward = progress
 
         # collision detection
         if obs['damage'] - obs_pre['damage'] > 0:
             reward = -1000
+            client.R.d['meta'] = True
+            print('Terminating because crashed')
+
 
         # Termination judgement #########################
         episode_terminate = False
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
-            reward = -200
+            reward = -1000
             episode_terminate = True
             client.R.d['meta'] = True
             print('Terminating because Out of Track')
@@ -170,20 +175,19 @@ class TorcsEnv:
         return self.observation, reward, client.R.d['meta'], {}
 
 
-    def reset(self, client, relaunch=True):        
+    def reset(self, client, serverport, agentport, relaunch=True):        
         self.time_step = 0
-        self.port = client.port
         if self.initial_reset is not True:
             # client.R.d['meta'] = True
             # client.respond_to_server()
 
             ## TENTATIVE. Restarting TORCS every episode suffers the memory leak bug!
             if relaunch is True:
-                self.reset_torcs(client)
+                self.reset_torcs(client,serverport)
                 print("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
-        client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations)  # Open new UDP in vtorcs
+        client = snakeoil3.Client(p=agentport, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
         # client = self.client
@@ -208,8 +212,8 @@ class TorcsEnv:
     def get_obs(self):
         return self.observation
 
-    def reset_torcs(self,client):
-        print("relaunch torcs in gym_torcs on port{}".format(client.port))
+    def reset_torcs(self,client,port):
+        print("relaunch torcs in gym_torcs on port{}".format(port))
         
         command = 'kill {}'.format(client.serverPID)
         os.system(command)
@@ -219,9 +223,9 @@ class TorcsEnv:
         command = None
         rank = MPI.COMM_WORLD.Get_rank()        
         if rank < self.no_of_visualisations and self.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(port)
         if self.vision is True:
             command += ' -vision'
 

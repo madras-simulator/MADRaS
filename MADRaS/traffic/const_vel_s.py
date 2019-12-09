@@ -2,8 +2,8 @@
 
 import sys
 import numpy as np
-import utils.snakeoil3_gym as snakeoil3
-from utils.madras_datatypes import Madras
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.madras_datatypes import Madras
 
 madras = Madras()
 PORT = madras.intX(sys.argv[1])

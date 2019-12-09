@@ -4,13 +4,13 @@ import time
 import yaml
 import random
 import numpy as np
-from controllers.pid import PID
-from utils.gym_torcs import TorcsEnv
-import utils.snakeoil3_gym as snakeoil3
-from utils.madras_datatypes import Madras
+from MADRaS.controllers.pid import PID
+from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.madras_datatypes import Madras
 
 madras = Madras()
-with open("./traffic/configurations.yml", "r") as ymlfile:
+with open("./MADRaS/MADRaS/traffic/configurations.yml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 random.seed(time.time())
@@ -38,7 +38,7 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
     steer = 0.0
     accel = 0.0
     brake = 0
-    print(velocity)
+    # print(velocity)
     for i in range(episode_count):
         info = {'termination_cause': 0}
         steer = 0.0
@@ -50,7 +50,8 @@ def playTraffic(port=3101, target_vel=50.0, angle=0.0, sleep=0):
             try:
                 ob, r_t, done, info = env.step(step, client, a_t, early_stop)
                 if done:
-                    break
+                    # break
+                    pass
             except Exception as e:
                 print("Exception caught at port " + str(i) + str(e))
                 ob = None
