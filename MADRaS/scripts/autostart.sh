@@ -21,3 +21,5 @@ xte 'key Return'
 #xte 'keydown Shift_L'; xte 'key plus'; xte 'keyup Shift_L'
 #xte 'usleep 100000'
 #xte 'keydown Shift_L'; xte 'key plus'; xte 'keyup Shift_L'
+
+# Will be soon deprecated (No longer supported by MADRaS)
