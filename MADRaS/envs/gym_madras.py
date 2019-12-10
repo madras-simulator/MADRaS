@@ -28,9 +28,9 @@ from mpi4py import MPI
 import random
 import socket
 import yaml
-import MADRaS.envs.reward_manager as rm
-import MADRaS.envs.done_manager as dm
-import MADRaS.envs.observation_manager as om
+import MADRaS.utils.reward_manager as rm
+import MADRaS.utils.done_manager as dm
+import MADRaS.utils.observation_manager as om
 import MADRaS.traffic.traffic as traffic
 
 path_and_file = os.path.realpath(__file__)
