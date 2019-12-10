@@ -1,7 +1,0 @@
-traffic:
-  max_steps_eps: 100000
-  max_eps: 5000
-  amplitude: 50.0
-  time_period: 300.0
-  random_stop_steps: 1000
-  

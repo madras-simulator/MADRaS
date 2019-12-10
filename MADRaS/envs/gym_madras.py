@@ -17,12 +17,7 @@ from copy import deepcopy
 import numpy as np
 import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.utils.gym_torcs import TorcsEnv
-import MADRaS.traffic.const_vel as agentConstant
-import MADRaS.traffic.rand_stop as agentStopper
-import MADRaS.traffic.vel_change as agentSinusoid
-import MADRaS.traffic.lane_switch as agentLaneChanger
-
-from MADRaS.controllers.pid import PID
+from MADRaS.controllers.pid import PIDController
 import gym
 from gym.utils import seeding
 import os
@@ -32,64 +27,138 @@ import time
 from mpi4py import MPI
 import random
 import socket
+import yaml
+import MADRaS.envs.reward_manager as rm
+import MADRaS.envs.done_manager as dm
+import MADRaS.envs.observation_manager as om
+import MADRaS.traffic.traffic as traffic
 
-from multiprocessing import Process
+path_and_file = os.path.realpath(__file__)
+path, file = os.path.split(path_and_file)
+DEFAULT_SIM_OPTIONS_FILE = os.path.join(path, "data", "sim_options.yml")
 
-class MadrasEnv(TorcsEnv,gym.Env):
-    """Definition of the Gym Madras Env."""
-    def __init__(self, vision=False, throttle=True,
-                 gear_change=False, port=60934, pid_assist=False,
-                 CLIENT_MAX_STEPS=np.inf,visualise=True,no_of_visualisations=1, multi_agent_mode=False ,random_traffic=True, traffic_type=[]):
-        # traffic_type is a list of traffic agents.
+
+class MadrasConfig(object):
+    """Configuration class for MADRaS Gym environment."""
+    def __init__(self):
+        self.vision = False
+        self.throttle = True
+        self.gear_change = False
+        self.torcs_server_port = 6006
+        self.pid_assist = False
+        self.pid_settings = {}
+        self.client_max_steps = np.inf
+        self.visualise = False
+        self.no_of_visualisations = 1
+        self.track_len = 7014.6
+        self.max_steps = 20000
+        self.target_speed = 15.0
+        self.normalize_actions = False
+        self.early_stop = True
+        self.observations = None
+        self.rewards = {}
+        self.dones = {}
+        self.traffic = {}
+
+    def update(self, cfg_dict):
+        """Update the configuration terms from a dictionary.
+        
+        Args:
+            cfg_dict: dictionary whose keys are the names of class attributes whose
+                      values must be updated
+        """
+        if cfg_dict is None:
+            return
+        direct_attributes = ['vision', 'throttle', 'gear_change', 'torcs_server_port', 'pid_assist',
+                             'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
+                             'max_steps', 'target_speed', 'early_stop', 'accel_pid',
+                             'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
+                             'pid_settings', 'traffic']
+        for key in direct_attributes:
+            if key in cfg_dict:
+                exec("self.{} = {}".format(key, cfg_dict[key]))
+        self.client_max_steps = (np.inf if cfg_dict['client_max_steps'] == -1
+                                 else cfg_dict['client_max_steps'])
+        self.validate()
+
+    def validate(self):
+        assert self.vision == False, "Vision input is not yet supported."
+        assert self.throttle == True, "Throttle must be True."
+        assert self.gear_change == False, "Only automatic transmission is currently supported."
+        # TODO(santara): add checks for self.state_dim
+        
+
+def parse_yaml(yaml_file):
+    if not yaml_file:
+        yaml_file = DEFAULT_SIM_OPTIONS_FILE
+    with open(yaml_file, 'r') as f:
+        return yaml.safe_load(f)
+
+
+class MadrasEnv(TorcsEnv, gym.Env):
+    """Definition of the Gym Madras Environment."""
+    def __init__(self, cfg_path=None):
         # If `visualise` is set to False torcs simulator will run in headless mode
-        """Init Method."""
+        self._config = MadrasConfig()
+        self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None
-        self.pid_assist = pid_assist
-        self.traffic_type = traffic_type
-        if random_traffic:
-            self.traffic_type = np.random.randint(0,4,len(traffic_type))
-        if self.pid_assist:
+        if self._config.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
         else:
-            self.action_dim = 3  # Accel, Steer, Brake
-        TorcsEnv.__init__(self, vision=False, throttle=True, gear_change=False,visualise=visualise,no_of_visualisations=no_of_visualisations)
-        self.state_dim = 29  # No. of sensors input
+            self.action_dim = 3  # Steer, Accel, Brake
+        self.observation_manager = om.ObservationManager(self._config.observations,
+                                                         self._config.vision)
+        self.reward_manager = rm.RewardManager(self._config.rewards)
+        self.done_manager = dm.DoneManager(self._config.dones)
+
+        TorcsEnv.__init__(self,
+                          vision=self._config.vision,
+                          throttle=self._config.throttle,
+                          gear_change=self._config.gear_change,
+                          visualise=self._config.visualise,
+                          no_of_visualisations=self._config.no_of_visualisations)
+
+        if self._config.normalize_actions:
+            self.action_space = gym.spaces.Box(low=-np.ones(3), high=np.ones(3))
+
+        self.observation_space = self.observation_manager.get_observation_space()
+        
+        self.state_dim = self.observation_manager.get_state_dim()  # No. of sensors input
         self.env_name = 'Madras_Env'
-        self.port = port
-        self.visualise = visualise
-        self.no_of_visualisations = no_of_visualisations
-        self.CLIENT_MAX_STEPS = CLIENT_MAX_STEPS
         self.client_type = 0  # Snakeoil client type
         self.initial_reset = True
-        self.early_stop = True
-        if self.pid_assist:
-            self.PID_latency = 10
-        else:
-            self.PID_latency = 1
-        self.accel_PID = PID(np.array([10.5, 0.05, 2.8]))  # accel PID
-        self.steer_PID = PID(np.array([5.1, 0.001, 0.000001]))  # steer PID
-
-        self.prev_lane = 0
-        self.prev_angle = 0
-        self.prev_vel = 0
-        self.prev_dist = 0
+        if self._config.pid_assist:
+            self.PID_controller = PIDController(self._config.pid_settings)
         self.ob = None
-        self.track_len = 7014.6
         self.seed()
-        if multi_agent_mode == False:
-            self.start_torcs_process()
+        self.start_torcs_process()
+        if self._config.traffic:
+            self.traffic_manager = traffic.MadrasTrafficManager(
+                self._config.torcs_server_port, self._config.traffic)
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+    @property
+    def config(self):
+        return self._config
         
-    def get_free_udp_port(self):
+    def test_torcs_server_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.bind(('', 0))
-        addr, port = udp.getsockname()
+        try:
+            udp.bind(('', self._config.torcs_server_port))
+        except:
+            print("Specified torcs_server_port {} is not available. "
+                  "Searching for alternative...".format(
+                  self._config.torcs_server_port))
+            udp.bind(('', 0))
+            _, self._config.torcs_server_port = udp.getsockname()
+            print("torcs_server_port has been reassigned to {}".format(
+                   self._config.torcs_server_port))
+
         udp.close()
-        return port
 
     def start_torcs_process(self):
         if self.torcs_proc is not None:
@@ -97,219 +166,155 @@ class MadrasEnv(TorcsEnv,gym.Env):
             time.sleep(0.5)
             self.torcs_proc = None
 
-        self.port = self.get_free_udp_port()
-        window_title = str(self.port)
+        self.test_torcs_server_port()
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
 
-        
-        if rank < self.no_of_visualisations and self.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.port)
+        if rank < self._config.no_of_visualisations and self._config.visualise:
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.torcs_server_port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
-        if self.vision is True:
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self._config.torcs_server_port)
+        if self._config.vision is True:
             command += ' -vision'
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
-        #if self.visualise:
-        #    os.system('sh autostart.sh {}'.format(window_title))
 
-   
-    def reset(self, prev_step_info=None):
-        """Reset Method. To be called at the end of each episode"""
+
+    def reset(self):
+        """Reset Method to be called at the end of each episode."""
+        if self._config.traffic:
+            self.traffic_manager.reset()
+
         if self.initial_reset:
-           
-            self.traffic_processes = []
-            
-            self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
-            
-            index = 0
-            if len(self.traffic_type) != 0:                
-                index = random.randint(1,len(self.ports)-1)
-            self.oldpos = index+1
-
-            self.mainport = self.ports.pop(index)
-
-            for i in range(len(self.traffic_type)):
-                tp = self.traffic_type[i]
-                if tp == 0: # constant velocity traffic
-                    p1 = Process(target = agentConstant.playTraffic, args=(self.ports[i],) )
-                    self.traffic_processes.append(p1)
-                elif tp == 1: # random stopping traffic
-                    p1 = Process(target = agentStopper.playTraffic, args=(self.ports[i],) )
-                    self.traffic_processes.append(p1)
-                elif tp == 2: # Sinusoidal traffic
-                    p1 = Process(target = agentSinusoid.playTraffic, args=(self.ports[i],) )
-                    self.traffic_processes.append(p1)
-                elif tp == 3: # Lane changing
-                    p1 = Process(target = agentLaneChanger.playTraffic, args=(self.ports[i],) )
-                    self.traffic_processes.append(p1)
-
-            for p in self.traffic_processes:
-                p.start()
-            
-            while self.ob is None:
-                try:
-                    self.client = snakeoil3.Client(p=self.mainport,
-                                                   vision=self.vision,visualise=self.visualise)
-                    # Open new UDP in vtorcs
-                    self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
-                    self.client.get_servers_input(step=0)
-                    # Get the initial input from torcs
-                    raw_ob = self.client.S.d
-                    # Get the current full-observation
-                    self.ob = self.make_observation(raw_ob)
-                except:
-                    pass
+            self.wait_for_observation()
             self.initial_reset = False
 
         else:
-            try:
+            while(True):
+                try:
+                    self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
+                except Exception:
+                    self.wait_for_observation()
 
-                for p in self.traffic_processes:
-                    p.terminate()
-
-                self.traffic_processes = []                                
-                self.ports = [self.port+p for p in range(1+len(self.traffic_type))]
-                index = 0
-                if len(self.traffic_type) != 0:                
-                    index = random.randint(1,len(self.ports)-1)
-                self.oldpos = index+1                
-                self.mainport = self.ports.pop(index)
-
-
-                for i in range(len(self.traffic_type)):
-                    tp = self.traffic_type[i]
-                    if tp == 0: # constant velocity traffic
-                        p1 = Process(target = agentConstant.playTraffic, args=(self.ports[i],) )
-                        self.traffic_processes.append(p1)
-                    elif tp == 1: # random stopping traffic
-                        p1 = Process(target = agentStopper.playTraffic, args=(self.ports[i],) )
-                        self.traffic_processes.append(p1)
-                    elif tp == 2: # Sinusoidal traffic
-                        p1 = Process(target = agentSinusoid.playTraffic, args=(self.ports[i],) )
-                        self.traffic_processes.append(p1)
-                    elif tp == 3: # random stopping traffic
-                        p1 = Process(target = agentLaneChanger.playTraffic, args=(self.ports[i],) )
-                        self.traffic_processes.append(p1)
-
-                for p in self.traffic_processes:
-                    p.start() 
-                
-                self.ob, self.client = TorcsEnv.reset(self, client=self.client, serverport=self.port, agentport=self.mainport, relaunch=True)
-                
-                    
-            except Exception as e:
-                self.ob = None
-                while self.ob is None:
-                    try:
-                        print("Hard Reset")
-                        # self.end(self.client)
-                        self.client = snakeoil3.Client(p=self.mainport,
-                                                       vision=self.vision)
-                        # Open new UDP in vtorcs
-                        self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
-                        self.client.get_servers_input(step=0)
-                        # Get the initial input from torcs
-                        raw_ob = self.client.S.d
-                        # Get the current full-observation from torcs
-                        self.ob = self.make_observation(raw_ob)
-                    except:
-                        pass
+                if not np.any(np.asarray(self.ob.track) < 0):
+                    break
+                else:
+                    print("Reset: Reset failed as agent started off track. Retrying...")
 
         self.distance_traversed = 0
-        s_t = np.hstack((self.ob.angle, self.ob.track, self.ob.trackPos,
-                        self.ob.speedX, self.ob.speedY, self.ob.speedZ,
-                        self.ob.wheelSpinVel / 100.0, self.ob.rpm))
-
-        self.prev_angle = 0.0
-        self.prev_dist = 0.0
-        self.prev_lane = 0.0
-        self.accel_PID.reset_pid()
-        self.steer_PID.reset_pid()
+        s_t = self.observation_manager.get_obs(self.ob, self._config)
+        if self._config.pid_assist:
+            self.PID_controller.reset()
+        self.reward_manager.reset()
+        self.done_manager.reset()
+        print("Reset: Starting new episode")
+        if np.any(np.asarray(self.ob.track) < 0):
+            print("Reset produced bad track values.")
         return s_t
 
-    def step(self, desire):
-        """Step method to be called at each time step."""
-        r_t = 0
+    def wait_for_observation(self):
+        """Refresh client and wait for a valid observation to come in."""
+        self.ob = None
+        while self.ob is None:
+            print("{} Still waiting for observation".format(self.name))
+            try:
+                self.client = snakeoil3.Client(p=self._config.torcs_server_port,
+                                               vision=self._config.vision,
+                                               visualise=self._config.visualise)
+                # Open new UDP in vtorcs
+                self.client.MAX_STEPS = self._config.client_max_steps
+                self.client.get_servers_input(0)
+                # Get the initial input from torcs
+                raw_ob = self.client.S.d
+                # Get the current full-observation from torcs
+                self.ob = self.make_observation(raw_ob)
+            except:
+                pass
 
-        for PID_step in range(self.PID_latency):
-                # Implement the desired trackpos and velocity using PID
-            if self.pid_assist:
-                self.accel_PID.update_error((desire[1] - self.prev_vel))
-                self.steer_PID.update_error((-(self.prev_lane - desire[0]) / 10 +
-                                            self.prev_angle))
-                if self.accel_PID.output() < 0.0:
-                    brake = 1
-                else:
-                    brake = 0
-                a_t = np.asarray([self.steer_PID.output(),
-                                 self.accel_PID.output(), brake])
-            else:
-                a_t = desire
+    def step_vanilla(self, action):
+        """Execute single step with steer, acceleration, brake controls."""
+        if self._config.normalize_actions:
+            action[1] = (action[1] + 1) / 2.0  # acceleration back to [0, 1]
+            action[2] = (action[2] + 1) / 2.0  # brake back to [0, 1]
+
+        r = 0.0
+        try:
+            self.ob, r, done, info = TorcsEnv.step(self, 0,
+                                                   self.client, action,
+                                                   self._config.early_stop)
+        
+        except Exception as e:
+            print("Exception {} caught at port {}".format(str(e), self._config.torcs_server_port))
+            self.wait_for_observation()
+
+        game_state = {"torcs_reward": r,
+                      "torcs_done": done,
+                      "distance_traversed": self.client.S.d['distRaced'],
+                      "angle": self.client.S.d["angle"],
+                      "damage": self.client.S.d["damage"],
+                      "trackPos": self.client.S.d["trackPos"],
+                      "track": self.client.S.d["track"]}
+        reward = self.reward_manager.get_reward(self._config, game_state)
+
+        done = self.done_manager.get_done_signal(self._config, game_state)
+
+        next_obs = self.observation_manager.get_obs(self.ob, self._config)
+        if done:
+            if self._config.traffic:
+                self.traffic_manager.kill_all_traffic_agents()
+            self.client.R.d["meta"] = True  # Terminate the episode
+            print('Terminating PID {}'.format(self.client.serverPID))
+
+        return next_obs, reward, done, info
+
+
+    def step_pid(self, desire):
+        """Execute single step with lane_pos, velocity controls."""
+        if self._config.normalize_actions:
+            # [-1, 1] should correspond to [-self._config.target_speed,
+            #                                self._config.target_speed]
+            speed_scale = self._config.target_speed
+            desire[1] *= speed_scale  # Now in m/s
+            # convert to km/hr
+            desire[1] *= 3600/1000  # Now in km/hr
+            # Normalize to gym_torcs specs
+            desire[1] /= self.default_speed
+
+        reward = 0.0
+
+        for PID_step in range(self._config.pid_settings['pid_latency']):
+            a_t = self.PID_controller.get_action(desire)
             try:
                 self.ob, r, done, info = TorcsEnv.step(self, PID_step,
                                                        self.client, a_t,
-                                                       self.early_stop)
+                                                       self._config.early_stop)
             except Exception as e:
-                print(("Exception caught at port " + str(e)))
-                self.ob = None
-                while self.ob is None:
-                    try:
-                        self.client = snakeoil3.Client(p=self.mainport,
-                                                       vision=self.vision)
-                        # Open new UDP in vtorcs
-                        self.client.MAX_STEPS = self.CLIENT_MAX_STEPS
-                        self.client.get_servers_input(0)
-                        # Get the initial input from torcs
-                        raw_ob = self.client.S.d
-                        # Get the current full-observation from torcs
-                        self.ob = self.make_observation(raw_ob)
-                    except:
-                        pass
-                    continue
-            self.prev_vel = self.ob.speedX
-            self.prev_angle = self.ob.angle
-            self.prev_lane = self.ob.trackPos
-            if (math.isnan(r)):
-                r = 0.0
-            r_t += r  # accumulate rewards over all the time steps
-
-            self.distance_traversed = self.client.S.d['distRaced']
-            if self.distance_traversed - self.prev_dist == 0:
-                r_t -= 50
-            # r_t += (self.distance_traversed - self.prev_dist) /\
-                # self.track_len
-            # r_t = self.distance_traversed
-            # r_t += (4-self.client.S.d['racePos'])
-            self.prev_dist = deepcopy(self.distance_traversed)
-            
-            if self.client.S.d['racePos'] < self.oldpos:
-                print("Overtake done")
-                r_t += 10000
-
-            if self.client.S.d['racePos'] > self.oldpos:
-                print("Overtakeen by traffic")
-                r_t -= 10000
-
-            if self.client.S.d['racePos'] == 1 and (len(self.traffic_type) != 0):
-                print("Reached Position 1 - Resetting")
-                done = True
-                r_t += 50000
-
-
-            self.oldpos = self.client.S.d['racePos']
-
-            if self.distance_traversed >= self.track_len:
-                # reward += 1000
-                done = True
+                print("Exception {} caught at port {}".format(
+                       str(e), self._config.torcs_server_port))
+                self.wait_for_observation()
+            game_state = {"torcs_reward": r,
+                          "torcs_done": done,
+                          "distance_traversed": self.client.S.d["distRaced"],
+                          "angle": self.client.S.d["angle"],
+                          "damage": self.client.S.d["damage"],
+                          "trackPos": self.client.S.d["trackPos"],
+                          "track": self.client.S.d["track"]}
+            reward += self.reward_manager.get_reward(self._config, game_state)
+            if self._config.pid_assist:
+                self.PID_controller.update(self.ob)
+            done = self.done_manager.get_done_signal(self._config, game_state)
             if done:
-                # self.reset()
+                self.client.R.d["meta"] = True  # Terminate the episode
+                print('Terminating PID {}'.format(self.client.serverPID))
                 break
 
-        s_t1 = np.hstack((self.ob.angle, self.ob.track, self.ob.trackPos,
-                          self.ob.speedX, self.ob.speedY, self.ob.speedZ,
-                          self.ob.wheelSpinVel / 100.0, self.ob.rpm))
+        next_obs = self.observation_manager.get_obs(self.ob, self._config)
 
-        return s_t1, r_t, done, info
+        return next_obs, reward, done, info
+
+    def step(self, action):
+        if self._config.pid_assist:
+            return self.step_pid(action)
+        else:
+            return self.step_vanilla(action)
