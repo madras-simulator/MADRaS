@@ -35,7 +35,7 @@ class TorcsEnv:
         self.visualise = visualise
         self.initial_run = True
         self.time_step = 0
-        self.currState = None 
+        self.currState = None      
         self.no_of_visualisations = no_of_visualisations
         if throttle is False:                           # Throttle is generally True
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
@@ -140,16 +140,21 @@ class TorcsEnv:
         rpm = np.array(obs['rpm'])
 
         progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) - sp * np.abs(obs['trackPos'])
+        # progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) 
+        progress = 0
         reward = progress
 
         # collision detection
         if obs['damage'] - obs_pre['damage'] > 0:
             reward = -1000
+            client.R.d['meta'] = True
+            print('Terminating because crashed')
+
 
         # Termination judgement #########################
         episode_terminate = False
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
-            reward = -200
+            reward = -1000
             episode_terminate = True
 
         if np.cos(obs['angle']) < 0: # Episode is terminated if the agent runs backward
@@ -162,7 +167,7 @@ class TorcsEnv:
         return self.observation, reward, episode_terminate, {}
 
 
-    def reset(self, client, relaunch=True):        
+    def reset(self, client, relaunch=True):
         self.time_step = 0
         self.port = client.port
         if self.initial_reset is not True:
