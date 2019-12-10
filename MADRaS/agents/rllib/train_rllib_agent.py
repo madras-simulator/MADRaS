@@ -1,7 +1,7 @@
 import ray
 import ray.rllib.agents.ppo as ppo
 from ray.tune.logger import pretty_print
-import MADRaS.rllib_helpers as helpers
+import rllib_helpers as helpers
 import logging.config
 import sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
