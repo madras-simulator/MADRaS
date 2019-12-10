@@ -2,7 +2,9 @@ import ray
 import ray.rllib.agents.ppo as ppo
 from ray.tune.logger import pretty_print
 import MADRaS.rllib_helpers as helpers
-
+import logging.config
+import sys
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 helpers.register_madras()
 ray.init()
@@ -23,4 +25,4 @@ for i in range(10000):
 
    if i % 10 == 0:
        checkpoint = trainer.save()
-       print("checkpoint saved at", checkpoint)
+       logging.info("checkpoint saved at", checkpoint)
