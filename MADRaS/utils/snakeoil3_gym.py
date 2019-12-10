@@ -59,6 +59,7 @@ import time
 import subprocess
 import logging
 logger = logging.getLogger(__name__)
+from mpi4py import MPI
 
 PI = 3.14159265359
 
