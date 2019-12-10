@@ -1,7 +1,7 @@
 import numpy as np
 import math
-import warnings
-
+import logging
+logger = logging.getLogger(__name__)
 
 class DoneManager(object):
     """Composes the done function from a given done configuration."""
@@ -14,8 +14,8 @@ class DoneManager(object):
                 raise ValueError("Unknown done class {}".format(key))
 
         if not self.dones:
-            warnings.warn("No done function specified. Setting TorcsDone "
-                          "as done.")
+            logging.warning("No done function specified. Setting TorcsDone "
+                            "as done.")
             self.dones['TorcsDone'] = TorcsDone()
 
     def get_done_signal(self, game_config, game_state):
@@ -61,7 +61,7 @@ class RaceOver(MadrasDone):
     """Terminates episode when the agent has finishes one lap."""
     def check_done(self, game_config, game_state):
         if game_state["distance_traversed"] >= game_config.track_len:
-            print("Done: Race over!")
+            logging.info("Done: Race over!")
             return True
         else:
             return False
@@ -79,7 +79,7 @@ class TimeOut(MadrasDone):
         else:
             max_steps = game_config.max_steps
         if self.num_steps >= max_steps:
-            print("Done: Episode terminated due to timeout.")
+            logging.info("Done: Episode terminated due to timeout.")
             self.num_steps = 0
             return True
         else:
@@ -96,7 +96,7 @@ class Collision(MadrasDone):
     def check_done(self, game_config, game_state):
         del game_config
         if self.damage < game_state["damage"]:
-            print("Done: Episode terminated because agent collided.")
+            logging.info("Done: Episode terminated because agent collided.")
             self.damage = 0.0
             return True
         else:
@@ -110,7 +110,7 @@ class TurnBackward(MadrasDone):
     def check_done(self, game_config, game_state):
         del game_config
         if np.cos(game_state["angle"]) < 0:
-            print("Done: Episode terminated because agent turned backward.")
+            logging.info("Done: Episode terminated because agent turned backward.")
             return True
         else:
             return False
@@ -124,7 +124,7 @@ class OutOfTrack(MadrasDone):
         del game_config
         self.num_steps += 1
         if game_state["trackPos"] < -1 or game_state["trackPos"] > 1 or np.any(np.asarray(game_state["track"]) < 0):
-            print("Done: Episode terminated because agent went out of track after {} steps.".format(self.num_steps))
+            logging.info("Done: Episode terminated because agent went out of track after {} steps.".format(self.num_steps))
             self.num_steps = 0
             return True
         else:

@@ -2,10 +2,9 @@ import numpy as np
 from MADRaS.utils.gym_torcs import TorcsEnv
 import MADRaS.utils.snakeoil3_gym as snakeoil3
 from MADRaS.controllers.pid import PIDController
-import MADRaS.utils.madras_datatypes as md
 from multiprocessing import Process
-
-MadrasDatatypes = md.MadrasDatatypes()
+import logging
+logger = logging.getLogger(__name__)
 
 class MadrasTrafficManager(object):
     """Creates the traffic agents for a given training configuration."""
@@ -64,7 +63,7 @@ class MadrasTrafficAgent(object):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
-            print("{} Still waiting for observation".format(self.name))
+            logging.debug("{} Still waiting for observation".format(self.name))
             try:
                 self.client = snakeoil3.Client(p=self.port,
                                                vision=(self.cfg["vision"] if "vision" in self.cfg else False),
@@ -86,6 +85,7 @@ class MadrasTrafficAgent(object):
 
     def flag_off(self, sleep=0):
         self.wait_for_observation()
+        logging.debug("[{}]: My server is at {}".format(self.name, self.client.serverPID))
         self.is_alive = True
         while True:
             if self.is_alive:
@@ -94,14 +94,14 @@ class MadrasTrafficAgent(object):
                     self.ob, _, done, info = self.env.step(0, self.client, action)
                 
                 except Exception as e:
-                    print("Exception {} caught by {} traffic agent at port {}".format(
+                    logging.debug("Exception {} caught by {} traffic agent at port {}".format(
                             str(e), self.name, self.port))
                     self.wait_for_observation()
                 self.detect_and_prevent_imminent_crash_out_of_track()
                 self.PID_controller.update(self.ob)
                 if done:
                     self.is_alive = False
-                    print("{} died.".format(self.name))
+                    logging.info("{} died.".format(self.name))
 
     def get_front_opponents(self):
         return np.array([

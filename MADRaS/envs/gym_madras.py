@@ -32,6 +32,8 @@ import MADRaS.envs.reward_manager as rm
 import MADRaS.envs.done_manager as dm
 import MADRaS.envs.observation_manager as om
 import MADRaS.traffic.traffic as traffic
+import logging
+logger = logging.getLogger(__name__)
 
 path_and_file = os.path.realpath(__file__)
 path, file = os.path.split(path_and_file)
@@ -150,13 +152,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
         try:
             udp.bind(('', self._config.torcs_server_port))
         except:
-            print("Specified torcs_server_port {} is not available. "
-                  "Searching for alternative...".format(
-                  self._config.torcs_server_port))
+            logging.info("Specified torcs_server_port {} is not available. "
+                         "Searching for alternative...".format(
+                         self._config.torcs_server_port))
             udp.bind(('', 0))
             _, self._config.torcs_server_port = udp.getsockname()
-            print("torcs_server_port has been reassigned to {}".format(
-                   self._config.torcs_server_port))
+            logging.info("torcs_server_port has been reassigned to {}".format(
+                         self._config.torcs_server_port))
 
         udp.close()
 
@@ -200,7 +202,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 if not np.any(np.asarray(self.ob.track) < 0):
                     break
                 else:
-                    print("Reset: Reset failed as agent started off track. Retrying...")
+                    logging.info("Reset: Reset failed as agent started off track. Retrying...")
 
         self.distance_traversed = 0
         s_t = self.observation_manager.get_obs(self.ob, self._config)
@@ -208,16 +210,16 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.PID_controller.reset()
         self.reward_manager.reset()
         self.done_manager.reset()
-        print("Reset: Starting new episode")
+        logging.info("Reset: Starting new episode")
         if np.any(np.asarray(self.ob.track) < 0):
-            print("Reset produced bad track values.")
+            logging.info("Reset produced bad track values.")
         return s_t
 
     def wait_for_observation(self):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
-            print("{} Still waiting for observation".format(self.name))
+            logging.debug("{} Still waiting for observation".format(self.name))
             try:
                 self.client = snakeoil3.Client(p=self._config.torcs_server_port,
                                                vision=self._config.vision,
@@ -245,7 +247,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                    self._config.early_stop)
         
         except Exception as e:
-            print("Exception {} caught at port {}".format(str(e), self._config.torcs_server_port))
+            logging.debug("Exception {} caught at port {}".format(str(e), self._config.torcs_server_port))
             self.wait_for_observation()
 
         game_state = {"torcs_reward": r,
@@ -264,7 +266,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             if self._config.traffic:
                 self.traffic_manager.kill_all_traffic_agents()
             self.client.R.d["meta"] = True  # Terminate the episode
-            print('Terminating PID {}'.format(self.client.serverPID))
+            logging.info('Terminating PID {}'.format(self.client.serverPID))
 
         return next_obs, reward, done, info
 
@@ -290,8 +292,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                        self.client, a_t,
                                                        self._config.early_stop)
             except Exception as e:
-                print("Exception {} caught at port {}".format(
-                       str(e), self._config.torcs_server_port))
+                logging.debug("Exception {} caught at port {}".format(
+                              str(e), self._config.torcs_server_port))
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
@@ -306,7 +308,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             done = self.done_manager.get_done_signal(self._config, game_state)
             if done:
                 self.client.R.d["meta"] = True  # Terminate the episode
-                print('Terminating PID {}'.format(self.client.serverPID))
+                logging.info('Terminating PID {}'.format(self.client.serverPID))
                 break
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)
