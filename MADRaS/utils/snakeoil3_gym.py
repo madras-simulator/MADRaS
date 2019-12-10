@@ -57,6 +57,7 @@ import getopt
 import os
 import time
 import subprocess
+from mpi4py import MPI
 
 PI = 3.14159265359
 
