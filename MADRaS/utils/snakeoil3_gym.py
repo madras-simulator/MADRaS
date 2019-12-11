@@ -327,7 +327,7 @@ class Client(object):
             elif '***shutdown***' in sockdata:
                 logging.debug("[{}]: Server has stopped the race on {}. "
                               "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
-                self.shutdown()
+                # self.shutdown() # AS: commenting because eval crashes after the agent completes one lap
                 return -1
             elif '***restart***' in sockdata:
                 # What do I do here?
@@ -354,9 +354,10 @@ class Client(object):
             self.so.sendto(message.encode(), (self.host, self.port))
         except socket.error as emsg:
             logging.debug("Error sending to server: {}".format(emsg))
+
             sys.exit(-1)
         if self.debug:
-            print(self.R.fancyout())
+            logging.debug(self.R.fancyout())
         # Or use this for plain output:
         # if self.debug: print self.R
 

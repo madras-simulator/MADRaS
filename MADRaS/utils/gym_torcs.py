@@ -27,7 +27,7 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, name='MadrasAgent'):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, torcs_server_port=3001, name='MadrasAgent'):
         self.name = name
         self.vision = vision
         self.throttle = throttle
@@ -39,14 +39,19 @@ class TorcsEnv:
         self.time_step = 0
         self.currState = None      
         self.no_of_visualisations = no_of_visualisations
-        if throttle is False:                           # Throttle is generally True
+        self.torcs_server_port = torcs_server_port
+        self.set_observation_and_action_spaces()
+
+
+    def set_observation_and_action_spaces(self):
+        if self.throttle is False:                           # Throttle is generally True
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
         else:
             high = np.array([1., 1., 1.], dtype=madras.floatX)
             low = np.array([-1., 0., 0.], dtype=madras.floatX)
             self.action_space = spaces.Box(low=low, high=high)    # steer,accel,brake
 
-        if vision is False:                             # Vision has to be set True if you need the images from the simulator 
+        if self.vision is False:                             # Vision has to be set True if you need the images from the simulator 
             high = np.inf * np.ones(self.obs_dim)
             low = -high
             self.observation_space = spaces.Box(low, high)
@@ -54,6 +59,7 @@ class TorcsEnv:
             high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255], dtype=madras.floatX)
             low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0], dtype=madras.floatX)
             self.observation_space = spaces.Box(low=low, high=high)
+
 
 
     def step(self, step, client, u, early_stop=1):
@@ -147,11 +153,11 @@ class TorcsEnv:
         # Termination judgement #########################
         episode_terminate = False
         if ((abs(track.any()) > 1 or abs(trackPos) > 1) and early_stop):  # Episode is terminated if the car is out of track
-            reward = -1000
+            reward = -200
             logging.debug("{} is out of track.".format(self.name))
             episode_terminate = True
 
-        if np.cos(obs['angle']) < 0: # Episode is terminated if the agent runs backward
+        if np.cos(obs['angle']) < 0: # Episode is terminated if the agent turns backward
             logging.debug("{} turns backward".format(self.name))
             episode_terminate = True
 
@@ -172,6 +178,7 @@ class TorcsEnv:
                 logging.debug("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
+        logging.debug("Trying to connect {} client on port {}".format(self.name, self.port))
         client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations, name=self.name)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
@@ -197,9 +204,9 @@ class TorcsEnv:
     def get_obs(self):
         return self.observation
 
+
     def reset_torcs(self, client):
         logging.debug("relaunch torcs in gym_torcs on port{}".format(client.port))
-        
         command = 'kill {}'.format(client.serverPID)
         os.system(command)
        
@@ -208,14 +215,12 @@ class TorcsEnv:
         command = None
         rank = MPI.COMM_WORLD.Get_rank()        
         if rank < self.no_of_visualisations and self.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.torcs_server_port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(client.port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self.vision is True:
             command += ' -vision'
-
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
-        #self.torcs_proc = subprocess.Popen([command], shell=True)
         time.sleep(1)
 
     def agent_to_torcs(self, u):
@@ -251,7 +256,8 @@ class TorcsEnv:
                      'rpm',
                      'track', 
                      'trackPos',
-                     'wheelSpinVel']
+                     'wheelSpinVel',
+                     'distFromStart']
             Observation = col.namedtuple('Observation', names)
             return Observation(focus=np.array(raw_obs['focus'], dtype=madras.floatX)/200.,
                                speedX=np.array(raw_obs['speedX'], dtype=madras.floatX)/self.default_speed,
@@ -263,7 +269,9 @@ class TorcsEnv:
                                rpm=np.array(raw_obs['rpm'], dtype=madras.floatX)/10000,
                                track=np.array(raw_obs['track'], dtype=madras.floatX)/200.,
                                trackPos=np.array(raw_obs['trackPos'], dtype=madras.floatX)/1.,
-                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=madras.floatX))
+                               wheelSpinVel=np.array(raw_obs['wheelSpinVel'], dtype=madras.floatX),
+                               distFromStart=np.array(raw_obs['distFromStart'], dtype=madras.floatX)
+                               )
         else:
             names = ['focus',
                      'speedX', 'speedY', 'speedZ', 'angle',
