@@ -57,9 +57,6 @@ import getopt
 import os
 import time
 import subprocess
-import logging
-logger = logging.getLogger(__name__)
-from mpi4py import MPI
 
 PI = 3.14159265359
 
@@ -143,16 +140,11 @@ class Client(object):
 
     def __init__(self, H=None, p=None, i=None,
                  e=None, t=None, s=None, d=None,
-                 vision=False, visualise=True,
-                 no_of_visualisations=1,
                  name='MadrasAgent'):
         """Init method for class Client."""
         self.name = name
         self.serverPID = None
-        self.vision = vision
         self.host = 'localhost'
-        self.visualise=visualise
-        self.no_of_visualisations = no_of_visualisations
         self.port = 3001
         self.sid = 'SCR'
         self.maxEpisodes = 1  # "Maximum number of episodes to perform"
@@ -182,14 +174,14 @@ class Client(object):
 
     def setup_connection(self):
         """Set Up UDP Socket."""
-        logging.debug("{} Trying to set connection".format(self.name))
+        print("{} Trying to set connection".format(self.name))
         try:
             self.so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except socket.error as emsg:
-            logging.debug("Error: {} Could not create socket...".format(self.name))
+            print("Error: {} Could not create socket...".format(self.name))
             sys.exit(-1)
         # == Initialize Connection To Server ==
-        self.so.settimeout(1)
+        # self.so.settimeout(1)
 
         n_fail = 15
         while True:
@@ -204,7 +196,7 @@ class Client(object):
             initmsg = '%s(init %s)' % (self.sid, a)
 
             try:
-                logging.debug('{} Trying to establish connection'.format(self.name))
+                print('{} Trying to establish connection'.format(self.name))
                 self.so.sendto(initmsg.encode(), (self.host, self.port))
             except socket.error as emsg:
                 sys.exit(-1)
@@ -213,45 +205,19 @@ class Client(object):
                 sockdata, addr = self.so.recvfrom(data_size)
                 sockdata = sockdata.decode('utf-8')
             except socket.error as emsg:
-                logging.debug("[{}]: SocketError: {}".format(self.name, emsg))
-                logging.debug("{} Waiting for server on {}............".format(self.name, self.port))
-                logging.debug("[{}]: Count Down : {}".format(self.name, n_fail))
+                print("[{}]: SocketError: {}".format(self.name, emsg))
+                print("{} Waiting for server on {}............".format(self.name, self.port))
+                print("[{}]: Count Down : {}".format(self.name, n_fail))
                 if n_fail < 0:
-                    logging.debug("[{}]: Relaunching torcs in snakeoil".format(self.name))
-                    if self.serverPID is not None:
-                        command = 'kill {}'.format(self.serverPID)
-                        os.system(command)
-                        self.serverPID = None
-                    time.sleep(1.0)
-
-                    # if self.vision is False:
-                    #     os.system(u'torcs -nofuel -nodamage -nolaptime &')
-                    # else:
-                    #     os.system(u'torcs -nofuel -nodamage -nolaptime -vision &')
-                    # time.sleep(1.0)
-                    
-                    # os.system('sh scripts/autostart.sh')
-                    command = None
-                    rank = MPI.COMM_WORLD.Get_rank()
-
-                    if rank < self.no_of_visualisations and self.visualise:
-                        command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.port)
-                    else:
-                        command = 'export TORCS_PORT={} && torcs -t 10000000  -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.port)
-                    if self.vision is True:
-                        command += ' -vision'
-                    self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
-                    time.sleep(0.5)
-                    
-                    n_fail = 50
+                    print("{} failed to connect to server {}".format(self.name, self.serverPID))
                 n_fail -= 1
 
             identify = '***identified***'
             if identify in sockdata:
                 data = sockdata.split(':')
                 self.serverPID = int(data[1].rstrip('\x00'))
-                logging.debug("{} Client connected on {}..............".format(self.name, self.port))
-                logging.debug("[{}]: Server PID is {}..............".format(self.name, self.serverPID))
+                print("{} Client connected on {}..............".format(self.name, self.port))
+                print("[{}]: Server PID is {}..............".format(self.name, self.serverPID))
                 break
 
     def parse_the_command_line(self):
@@ -309,29 +275,28 @@ class Client(object):
                 sockdata, addr = self.so.recvfrom(data_size)
                 sockdata = sockdata.decode('utf-8')
             except socket.error as emsg:
-                logging.debug('[{}]: SocketError: {}'.format(self.name, emsg))
+                print('[{}]: SocketError: {}'.format(self.name, emsg))
 
-                logging.debug("{} Waiting for server data on {}..............".format(self.name, self.port))
+                print("{} Waiting for server data on {}..............".format(self.name, self.port))
 
-                logging.debug("[{}]: Server count down : {}".format(self.name, n_fail))
+                print("[{}]: Server count down : {}".format(self.name, n_fail))
                 if n_fail < 0:
                     self.shutdown()
                     return -1
                     n_fail = n_fail_org
 
                 n_fail -= 1
-
             if '***identified***' in sockdata:
-                logging.debug("{} Client connected on {}..............".format(self.name, self.port))
+                print("{} Client connected on {}..............".format(self.name, self.port))
                 continue
             elif '***shutdown***' in sockdata:
-                logging.debug("[{}]: Server has stopped the race on {}. "
-                              "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
-                # self.shutdown() # AS: commenting because eval crashes after the agent completes one lap
+                print("[{}]: Server has stopped the race on {}. "
+                      "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
+                self.shutdown()
                 return -1
             elif '***restart***' in sockdata:
                 # What do I do here?
-                logging.debug("[{}]: Server has restarted the race on {}.".format(self.name, self.port))
+                print("[{}]: Server has restarted the race on {}.".format(self.name, self.port))
                 # I haven't actually caught the server doing this.
                 self.shutdown()
                 return -1
@@ -342,7 +307,7 @@ class Client(object):
                 if self.debug:
                     sys.stderr.write("\x1b[2J\x1b[H")
                     # Clear for steady output.
-                    logging.debug(self.S)
+                    print(self.S)
                 return 1  # Can now return from this function.
 
     def respond_to_server(self):
@@ -353,11 +318,11 @@ class Client(object):
             message = repr(self.R)
             self.so.sendto(message.encode(), (self.host, self.port))
         except socket.error as emsg:
-            logging.debug("Error sending to server: {}".format(emsg))
-
+            print("Error sending to server: %s Message %s"
+                  % (emsg[1], str(emsg[0])))
             sys.exit(-1)
         if self.debug:
-            logging.debug(self.R.fancyout())
+            print(self.R.fancyout())
         # Or use this for plain output:
         # if self.debug: print self.R
 
@@ -365,8 +330,8 @@ class Client(object):
         """Race is terminated."""
         if not self.so:
             return
-        logging.debug(("Race terminated or %d steps elapsed. Shutting down %d."
-                       % (self.maxSteps, self.port)))
+        print(("Race terminated or %d steps elapsed. Shutting down %d."
+               % (self.maxSteps, self.port)))
         self.so.close()
         self.so = None
         # sys.exit() # No need for this really.

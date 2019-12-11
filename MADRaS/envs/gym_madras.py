@@ -31,6 +31,7 @@ import yaml
 import MADRaS.utils.reward_manager as rm
 import MADRaS.utils.done_manager as dm
 import MADRaS.utils.observation_manager as om
+import MADRaS.envs.torcs_server_config as torcs_config
 import MADRaS.traffic.traffic as traffic
 import logging
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ logger = logging.getLogger(__name__)
 path_and_file = os.path.realpath(__file__)
 path, file = os.path.split(path_and_file)
 DEFAULT_SIM_OPTIONS_FILE = os.path.join(path, "data", "sim_options.yml")
+
 
 
 class MadrasConfig(object):
@@ -60,7 +62,8 @@ class MadrasConfig(object):
         self.observations = None
         self.rewards = {}
         self.dones = {}
-        self.traffic = {}
+        self.traffic = []
+        self.server_config = {}
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -75,7 +78,7 @@ class MadrasConfig(object):
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
-                             'pid_settings', 'traffic']
+                             'pid_settings', 'traffic', "server_config"]
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -88,7 +91,7 @@ class MadrasConfig(object):
         assert self.throttle == True, "Throttle must be True."
         assert self.gear_change == False, "Only automatic transmission is currently supported."
         # TODO(santara): add checks for self.state_dim
-        
+
 
 def parse_yaml(yaml_file):
     if not yaml_file:
@@ -101,29 +104,17 @@ class MadrasEnv(TorcsEnv, gym.Env):
     """Definition of the Gym Madras Environment."""
     def __init__(self, cfg_path=None):
         # If `visualise` is set to False torcs simulator will run in headless mode
+        self.step_num = 0
         self._config = MadrasConfig()
         self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None
-        if self._config.pid_assist:
-            self.action_dim = 2  # LanePos, Velocity
-        else:
-            self.action_dim = 3  # Steer, Accel, Brake
+
         self.observation_manager = om.ObservationManager(self._config.observations,
                                                          self._config.vision)
+        self.set_observation_and_action_spaces()
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
-
-        TorcsEnv.__init__(self,
-                          vision=self._config.vision,
-                          throttle=self._config.throttle,
-                          gear_change=self._config.gear_change,
-                          visualise=self._config.visualise,
-                          no_of_visualisations=self._config.no_of_visualisations)
-
-        if self._config.normalize_actions:
-            self.action_space = gym.spaces.Box(low=-np.ones(3), high=np.ones(3))
-
-        self.observation_space = self.observation_manager.get_observation_space()
+        self.torcs_server_port = self._config.torcs_server_port
         
         self.state_dim = self.observation_manager.get_state_dim()  # No. of sensors input
         self.env_name = 'Madras_Env'
@@ -133,11 +124,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.PID_controller = PIDController(self._config.pid_settings)
         self.ob = None
         self.seed()
+        self.torcs_server_config = torcs_config.TorcsConfig(
+            self._config.server_config, randomize=True)
         self.start_torcs_process()
-        if self._config.traffic:
-            self.traffic_manager = traffic.MadrasTrafficManager(
-                self._config.torcs_server_port, self._config.traffic)
 
+    def validate_config(self):
+        num_traffic_agents_in_sim_options = len(self._config.traffic) if self._config.traffic else 0
+        assert self.torcs_server_config.max_cars == (num_traffic_agents_in_sim_options + 1)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -147,18 +140,33 @@ class MadrasEnv(TorcsEnv, gym.Env):
     def config(self):
         return self._config
         
+    def set_observation_and_action_spaces(self):
+        if self._config.pid_assist:
+            self.action_dim = 2  # LanePos, Velocity
+            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, -140.0]),
+                                               high=np.asarray([1.0, 140.0]))  # Max speed of 140 kmph is allowed in TORCS
+        else:
+            self.action_dim = 3  # Steer, Accel, Brake
+            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, 0.0, 0.0]),
+                                               high=np.asarray([1.0, 1.0, 1.0]))
+
+        if self._config.normalize_actions:
+            self.action_space = gym.spaces.Box(low=-np.ones(self.action_dim),
+                                               high=np.ones(self.action_dim))
+        self.observation_space = self.observation_manager.get_observation_space()
+        
     def test_torcs_server_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            udp.bind(('', self._config.torcs_server_port))
+            udp.bind(('', self.torcs_server_port))
         except:
             logging.info("Specified torcs_server_port {} is not available. "
                          "Searching for alternative...".format(
-                         self._config.torcs_server_port))
+                         self.torcs_server_port))
             udp.bind(('', 0))
-            _, self._config.torcs_server_port = udp.getsockname()
+            _, self.torcs_server_port = udp.getsockname()
             logging.info("torcs_server_port has been reassigned to {}".format(
-                         self._config.torcs_server_port))
+                         self.torcs_server_port))
 
         udp.close()
 
@@ -169,13 +177,27 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.torcs_proc = None
 
         self.test_torcs_server_port()
+
+        if self._config.traffic:
+            self.traffic_manager = traffic.MadrasTrafficManager(
+                self.torcs_server_port, 1, self._config.traffic)
+
+        TorcsEnv.__init__(self,
+                          vision=self._config.vision,
+                          throttle=self._config.throttle,
+                          gear_change=self._config.gear_change,
+                          visualise=self._config.visualise,
+                          no_of_visualisations=self._config.no_of_visualisations,
+                          torcs_server_port=self.torcs_server_port)
+
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
-
+        self.torcs_server_config.generate_torcs_server_config()
+        self.madras_agent_port = self.torcs_server_port + self.torcs_server_config.num_traffic_cars
         if rank < self._config.no_of_visualisations and self._config.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.torcs_server_port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.torcs_server_port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self._config.torcs_server_port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self._config.vision is True:
             command += ' -vision'
 
@@ -185,15 +207,22 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
     def reset(self):
         """Reset Method to be called at the end of each episode."""
+        self.step_num = 0
+        if not self.initial_reset:
+            self.torcs_server_config.generate_torcs_server_config()
+            self.madras_agent_port = self.torcs_server_port + self.torcs_server_config.num_traffic_cars
+            self.client.port = self.madras_agent_port  # This is very bad code! But we wont need it any way in v2
+            logging.info("Num traffic cars in server {}".format(self.torcs_server_config.num_traffic_cars))
+
         if self._config.traffic:
-            self.traffic_manager.reset()
+            self.traffic_manager.reset(self.torcs_server_config.num_traffic_cars)
 
         if self.initial_reset:
             self.wait_for_observation()
             self.initial_reset = False
 
         else:
-            while(True):
+            while True:
                 try:
                     self.ob, self.client = TorcsEnv.reset(self, client=self.client, relaunch=True)
                 except Exception:
@@ -219,9 +248,11 @@ class MadrasEnv(TorcsEnv, gym.Env):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
+
             logging.debug("{} Still waiting for observation".format(self.name))
+
             try:
-                self.client = snakeoil3.Client(p=self._config.torcs_server_port,
+                self.client = snakeoil3.Client(p=self.madras_agent_port,
                                                vision=self._config.vision,
                                                visualise=self._config.visualise)
                 # Open new UDP in vtorcs
@@ -247,7 +278,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                    self._config.early_stop)
         
         except Exception as e:
-            logging.debug("Exception {} caught at port {}".format(str(e), self._config.torcs_server_port))
+
+            logging.debug("Exception {} caught at port {}".format(str(e), self.torcs_server_port))
+
             self.wait_for_observation()
 
         game_state = {"torcs_reward": r,
@@ -256,6 +289,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                       "angle": self.client.S.d["angle"],
                       "damage": self.client.S.d["damage"],
                       "trackPos": self.client.S.d["trackPos"],
+                      "racePos": self.client.S.d["racePos"],
                       "track": self.client.S.d["track"]}
         reward = self.reward_manager.get_reward(self._config, game_state)
 
@@ -280,8 +314,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
             desire[1] *= speed_scale  # Now in m/s
             # convert to km/hr
             desire[1] *= 3600/1000  # Now in km/hr
-            # Normalize to gym_torcs specs
-            desire[1] /= self.default_speed
+        # Normalize to gym_torcs specs
+        desire[1] /= self.default_speed
 
         reward = 0.0
 
@@ -293,7 +327,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                        self._config.early_stop)
             except Exception as e:
                 logging.debug("Exception {} caught at port {}".format(
-                              str(e), self._config.torcs_server_port))
+                              str(e), self.torcs_server_port))
+
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
@@ -301,6 +336,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           "angle": self.client.S.d["angle"],
                           "damage": self.client.S.d["damage"],
                           "trackPos": self.client.S.d["trackPos"],
+                          "racePos": self.client.S.d["racePos"],
                           "track": self.client.S.d["track"]}
             reward += self.reward_manager.get_reward(self._config, game_state)
             if self._config.pid_assist:
@@ -316,6 +352,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         return next_obs, reward, done, info
 
     def step(self, action):
+        self.step_num += 1
         if self._config.pid_assist:
             return self.step_pid(action)
         else:
