@@ -117,3 +117,32 @@ class SingleAgentSimpleLapObs(MadrasObs):
         observation_space = spaces.Box(low=low, high=high)
 
         return observation_space
+
+
+class SingleAgentInTrafficObs(MadrasObs):
+    def get_obs(self, full_obs):
+        track = [(x if x > 0 else 0) for x in full_obs.track]
+        obs = np.hstack((full_obs.angle,
+                        track,
+                        full_obs.trackPos,
+                        full_obs.speedX,
+                        full_obs.speedY,
+                        full_obs.speedZ,
+                        full_obs.opponents))
+        return obs
+    
+    @property
+    def observation_dim(self):
+        return 60
+
+    def observation_space(self, vision):
+        if vision:
+            raise NotImplementedError("Vision inputs not supported yet.")
+        high = np.asarray([1] + 19*[1] + [np.inf] + 3*[np.inf] + 36*[1],
+                          dtype=MadrasDatatypes.floatX)
+        low = np.asarray([-1] + 19*[0] + [-np.inf] + 3*[-np.inf] + 36*[0],
+                          dtype=MadrasDatatypes.floatX)
+
+        observation_space = spaces.Box(low=low, high=high)
+
+        return observation_space
