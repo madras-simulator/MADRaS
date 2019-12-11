@@ -7,7 +7,7 @@ server_config:
     - alpine-1
     - alpine-2
   distance_to_start: 25
-  torcs_server_config_path: /home/anirban/.torcs/config/raceman/  # This must be the value for TORCS with rendering on
+  torcs_server_config_path: /home/<username>/.torcs/config/raceman/  # This must be the value for TORCS with rendering on
 
 randomize_env: True
 vision: False  # whether to use vision input

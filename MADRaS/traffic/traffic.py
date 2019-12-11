@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import numpy as np
 from MADRaS.utils.gym_torcs import TorcsEnv
 import MADRaS.utils.snakeoil3_gym as snakeoil3
@@ -13,7 +14,7 @@ MadrasDatatypes = md.MadrasDatatypes()
 class MadrasTrafficManager(object):
     """Creates the traffic agents for a given training configuration."""
     def __init__(self, torcs_server_port, num_learning_agents, cfg):
-        self.traffic_agents = {}
+        self.traffic_agents = OrderedDict()
         self.traffic_processes = []
         self.num_episodes_of_training = 0
         for i, agent in enumerate(cfg):
