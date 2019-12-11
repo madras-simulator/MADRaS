@@ -130,7 +130,7 @@ class TorcsConfig(object):
 
     def get_num_traffic_cars(self):
         if not self.randomize:
-            return self.max_cars
+            return self.max_cars-1
         else:
             num_traffic_cars = np.random.randint(low=0, high=self.max_cars)
             return num_traffic_cars

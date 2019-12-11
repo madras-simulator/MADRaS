@@ -70,7 +70,8 @@ class MadrasTrafficAgent(object):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
-            logging.debug("{} Still waiting for observation".format(self.name))
+            logging.debug("{} Still waiting for observation at {}".format(self.name, self.port))
+            print("{} Still waiting for observation at {}".format(self.name, self.port))
             try:
                 self.client = snakeoil3.Client(
                     p=self.port,
@@ -94,7 +95,7 @@ class MadrasTrafficAgent(object):
     def flag_off(self, random_seed=0):
         del random_seed
         self.wait_for_observation()
-        logging.debug("[{}]: My server is at {}".format(self.name, self.client.serverPID))
+        logging.debug("[{}]: My server is PID: {}".format(self.name, self.client.serverPID))
         self.is_alive = True
         while True:
             if self.is_alive:

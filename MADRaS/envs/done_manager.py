@@ -66,6 +66,7 @@ class RaceOver(MadrasDone):
         self.num_steps += 1
         if game_state["distance_traversed"] >= game_config.track_len:
             logging.info("Done: Race over in {} steps!".format(self.num_steps))
+            print("Done: Race over in {} steps!".format(self.num_steps))
             return True
         else:
             return False
@@ -87,6 +88,7 @@ class TimeOut(MadrasDone):
             max_steps = game_config.max_steps
         if self.num_steps >= max_steps:
             logging.info("Done: Episode terminated due to timeout.")
+            print("Done: Episode terminated due to timeout.")
             self.num_steps = 0
             return True
         else:
@@ -106,6 +108,7 @@ class Collision(MadrasDone):
         self.num_steps += 1
         if self.damage < game_state["damage"]:
             logging.info("Done: Episode terminated because agent collided after {} steps.".format(self.num_steps))
+            print("Done: Episode terminated because agent collided after {} steps.".format(self.num_steps))
             self.damage = 0.0
             return True
         else:
@@ -125,6 +128,7 @@ class TurnBackward(MadrasDone):
         self.num_steps += 1
         if np.cos(game_state["angle"]) < 0:
             logging.info("Done: Episode terminated because agent turned backward after {} steps.".format(self.num_steps))
+            print("Done: Episode terminated because agent turned backward after {} steps.".format(self.num_steps))
             return True
         else:
             return False
@@ -141,6 +145,7 @@ class OutOfTrack(MadrasDone):
         self.num_steps += 1
         if game_state["trackPos"] < -1 or game_state["trackPos"] > 1 or np.any(np.asarray(game_state["track"]) < 0):
             logging.info("Done: Episode terminated because agent went out of track after {} steps.".format(self.num_steps))
+            print("Done: Episode terminated because agent went out of track after {} steps.".format(self.num_steps))
             self.num_steps = 0
             return True
         else:
@@ -157,6 +162,8 @@ class Rank1(MadrasDone):
         self.num_steps += 1
         if game_state["racePos"] == 1:
             logging.info("Done: Episode terminated because agent"
+                         " is Rank 1 after {} steps.".format(self.num_steps))
+            print("Done: Episode terminated because agent"
                          " is Rank 1 after {} steps.".format(self.num_steps))
             self.num_steps = 0
             return True

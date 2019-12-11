@@ -171,6 +171,7 @@ class TorcsEnv:
                 logging.debug("### TORCS is RELAUNCHED ###")
 
         # Modify here if you use multiple tracks in the environment
+        print("Trying to connect {} client on port {}".format(self.name, self.port))
         client = snakeoil3.Client(p=self.port, vision=self.vision,visualise=self.visualise,no_of_visualisations=self.no_of_visualisations, name=self.name)  # Open new UDP in vtorcs
         client.MAX_STEPS = np.inf
 
@@ -197,8 +198,7 @@ class TorcsEnv:
         return self.observation
 
     def reset_torcs(self,client):
-        # print("relaunch torcs in gym_torcs on port{}".format(client.port))
-        logging.debug("relaunch torcs in gym_torcs on port {}".format(self.torcs_server_port))
+        print(">>>>>>relaunch torcs in gym_torcs on port {}".format(self.torcs_server_port))
         
         command = 'kill {}'.format(client.serverPID)
         os.system(command)
@@ -215,7 +215,8 @@ class TorcsEnv:
             command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self.vision is True:
             command += ' -vision'
-
+        # print("\n\n---------------------------------------------------Launching torcs from gymtorcs on Port {}\n\n".format(client.port))
+        print("\n\n------------------------Launching torcs from gymtorcs on Port {}\n\n".format(self.torcs_server_port))
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         #self.torcs_proc = subprocess.Popen([command], shell=True)
         time.sleep(1)

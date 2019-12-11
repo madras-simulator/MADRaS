@@ -5,7 +5,7 @@ import rllib_helpers as helpers
 import logging
 import logging.config
 import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 helpers.register_madras()
@@ -37,7 +37,7 @@ trainer = ppo.PPOTrainer(config=config, env="madras_env")
 # Ckpt for Single agent in Parking traffic - 5 agents: agent starts in the left lane and swerves to the left
 # trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_14-56-5056r5q6ag/checkpoint_111/checkpoint-111")
 # Training with 6 Parking traffic agents: agent starts in the right lane - maybe it will learn to swerve right this time
-trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_17-17-53zmnr5yxi/checkpoint_423/checkpoint-423")
+# trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_17-17-53zmnr5yxi/checkpoint_423/checkpoint-423")
 for i in range(10000):
    # Perform one iteration of training the policy with PPO
    result = trainer.train()

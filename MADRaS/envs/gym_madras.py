@@ -113,10 +113,10 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.done_manager = dm.DoneManager(self._config.dones)
 
         self.num_traffic_agents = len(self._config.traffic) if self._config.traffic else 0
-        if self._config.traffic:
-            self.traffic_manager = traffic.MadrasTrafficManager(
-                self._config.torcs_server_port, 1, self._config.traffic)
-        self.madras_agent_port = self._config.torcs_server_port + self.num_traffic_agents
+        # if self._config.traffic:
+        #     self.traffic_manager = traffic.MadrasTrafficManager(
+        #         self._config.torcs_server_port, 1, self._config.traffic)
+        # self.madras_agent_port = self._config.torcs_server_port + self.num_traffic_agents
 
         TorcsEnv.__init__(self,
                           vision=self._config.vision,
@@ -163,8 +163,11 @@ class MadrasEnv(TorcsEnv, gym.Env):
                          self._config.torcs_server_port))
             udp.bind(('', 0))
             _, self._config.torcs_server_port = udp.getsockname()
+            print("torcs_server_port has been reassigned to {}".format(
+                         self._config.torcs_server_port))
             logging.info("torcs_server_port has been reassigned to {}".format(
                          self._config.torcs_server_port))
+            self.torcs_server_port = self._config.torcs_server_port  # is used in gymtorcs
 
         udp.close()
 
@@ -175,9 +178,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.torcs_proc = None
 
         self.test_torcs_server_port()
+        if self._config.traffic:
+            self.traffic_manager = traffic.MadrasTrafficManager(
+                self._config.torcs_server_port, 1, self._config.traffic)
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
         self.torcs_server_config.generate_torcs_server_config()
+        print(">>>>>>>>>>>>>> Num traffic cars = {}<<<<<<<<<<<<<<".format(self.torcs_server_config.num_traffic_cars))
         self.madras_agent_port = self._config.torcs_server_port + self.torcs_server_config.num_traffic_cars
         if rank < self._config.no_of_visualisations and self._config.visualise:
             command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.torcs_server_port)
@@ -185,6 +192,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self._config.torcs_server_port)
         if self._config.vision is True:
             command += ' -vision'
+        print("\n\n---------------------------------------------------Launching torcs from gymmadras on Port {}\n\n".format(self.torcs_server_port))
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
@@ -195,9 +203,11 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.step_num = 0
         if not self.initial_reset:
             self.torcs_server_config.generate_torcs_server_config()
+            print(">>>>>>>>>>>>>> Num traffic cars = {}<<<<<<<<<<<<<<".format(self.torcs_server_config.num_traffic_cars))
             self.madras_agent_port = self._config.torcs_server_port + self.torcs_server_config.num_traffic_cars
             self.client.port = self.madras_agent_port  # This is very bad code! But we wont need it any way in v2
             logging.info("Num traffic cars in server {}".format(self.torcs_server_config.num_traffic_cars))
+            print("Num traffic cars in server {}".format(self.torcs_server_config.num_traffic_cars))
         if self._config.traffic:
             self.traffic_manager.reset(self.torcs_server_config.num_traffic_cars)
 
@@ -233,6 +243,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.ob = None
         while self.ob is None:
             logging.info("{} Still waiting for observation".format(self.name))
+            print("{} Still waiting for observation at {}".format(self.name, self.madras_agent_port))
             try:
                 self.client = snakeoil3.Client(p=self.madras_agent_port, # self._config.torcs_server_port,
                                                vision=self._config.vision,
