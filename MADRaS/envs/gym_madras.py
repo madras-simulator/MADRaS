@@ -31,7 +31,7 @@ import yaml
 import MADRaS.utils.reward_manager as rm
 import MADRaS.utils.done_manager as dm
 import MADRaS.utils.observation_manager as om
-import MADRaS.envs.torcs_server_config as torcs_config
+import MADRaS.utils.torcs_server_config as torcs_config
 import MADRaS.traffic.traffic as traffic
 import logging
 logger = logging.getLogger(__name__)
