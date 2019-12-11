@@ -64,6 +64,7 @@ class MadrasConfig(object):
         self.dones = {}
         self.traffic = []
         self.server_config = {}
+        self.randomize_env = False
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -78,7 +79,7 @@ class MadrasConfig(object):
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
-                             'pid_settings', 'traffic', "server_config"]
+                             'pid_settings', 'traffic', "server_config", "randomize_env"]
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -125,7 +126,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.ob = None
         self.seed()
         self.torcs_server_config = torcs_config.TorcsConfig(
-            self._config.server_config, randomize=True)
+            self._config.server_config, randomize=self._config.randomize_env)
         self.start_torcs_process()
 
     def validate_config(self):
