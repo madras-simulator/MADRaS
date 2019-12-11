@@ -15,9 +15,9 @@ The following enhancements were made for Multi-agent synchronization using excep
 import math
 from copy import deepcopy
 import numpy as np
-import utils.snakeoil3_gym as snakeoil3
-from utils.gym_torcs import TorcsEnv
-from controllers.pid import PIDController
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.utils.gym_torcs import TorcsEnv
+from MADRaS.controllers.pid import PIDController
 import gym
 from gym.utils import seeding
 import os
@@ -27,11 +27,11 @@ import time
 from mpi4py import MPI
 import socket
 import yaml
-import envs.reward_manager as rm
-import envs.done_manager as dm
-import envs.observation_manager as om
-import envs.torcs_server_config as torcs_config
-import traffic.traffic as traffic
+import MADRaS.utils.reward_manager as rm
+import MADRaS.utils.done_manager as dm
+import MADRaS.utils.observation_manager as om
+import MADRaS.envs.torcs_server_config as torcs_config
+import MADRaS.traffic.traffic as traffic
 import logging
 logger = logging.getLogger(__name__)
 
@@ -105,29 +105,23 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.torcs_proc = None
         if self._config.pid_assist:
             self.action_dim = 2  # LanePos, Velocity
+            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, -140.0]),
+                                               high=np.asarray([1.0, 140.0]))  # Max speed of 140 kmph is allowed in TORCS
         else:
             self.action_dim = 3  # Steer, Accel, Brake
+            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, 0.0, 0.0]),
+                                               high=np.asarray([1.0, 1.0, 1.0]))
+
+        if self._config.normalize_actions:
+            self.action_space = gym.spaces.Box(low=-np.ones(self.action_dim),
+                                               high=np.ones(self.action_dim))
+
         self.observation_manager = om.ObservationManager(self._config.observations,
                                                          self._config.vision)
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
+        self.torcs_server_port = self._config.torcs_server_port
 
-        self.num_traffic_agents = len(self._config.traffic) if self._config.traffic else 0
-        # if self._config.traffic:
-        #     self.traffic_manager = traffic.MadrasTrafficManager(
-        #         self._config.torcs_server_port, 1, self._config.traffic)
-        # self.madras_agent_port = self._config.torcs_server_port + self.num_traffic_agents
-
-        TorcsEnv.__init__(self,
-                          vision=self._config.vision,
-                          throttle=self._config.throttle,
-                          gear_change=self._config.gear_change,
-                          visualise=self._config.visualise,
-                          no_of_visualisations=self._config.no_of_visualisations,
-                          torcs_server_port=self._config.torcs_server_port)
-
-        if self._config.normalize_actions:
-            self.action_space = gym.spaces.Box(low=-np.ones(3), high=np.ones(3))
 
         self.observation_space = self.observation_manager.get_observation_space()
         
@@ -141,9 +135,11 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.seed()
         self.torcs_server_config = torcs_config.TorcsConfig(
             self._config.server_config, randomize=True)
-        assert self.torcs_server_config.max_cars == (self.num_traffic_agents + 1)
         self.start_torcs_process()
 
+    def validate_config(self):
+        num_traffic_agents_in_sim_options = len(self._config.traffic) if self._config.traffic else 0
+        assert self.torcs_server_config.max_cars == (num_traffic_agents_in_sim_options + 1)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -156,18 +152,15 @@ class MadrasEnv(TorcsEnv, gym.Env):
     def test_torcs_server_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            udp.bind(('', self._config.torcs_server_port))
+            udp.bind(('', self.torcs_server_port))
         except:
             logging.info("Specified torcs_server_port {} is not available. "
                          "Searching for alternative...".format(
-                         self._config.torcs_server_port))
+                         self.torcs_server_port))
             udp.bind(('', 0))
-            _, self._config.torcs_server_port = udp.getsockname()
-            print("torcs_server_port has been reassigned to {}".format(
-                         self._config.torcs_server_port))
+            _, self.torcs_server_port = udp.getsockname()
             logging.info("torcs_server_port has been reassigned to {}".format(
-                         self._config.torcs_server_port))
-            self.torcs_server_port = self._config.torcs_server_port  # is used in gymtorcs
+                         self.torcs_server_port))
 
         udp.close()
 
@@ -178,21 +171,29 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.torcs_proc = None
 
         self.test_torcs_server_port()
+
         if self._config.traffic:
             self.traffic_manager = traffic.MadrasTrafficManager(
-                self._config.torcs_server_port, 1, self._config.traffic)
+                self.torcs_server_port, 1, self._config.traffic)
+
+        TorcsEnv.__init__(self,
+                          vision=self._config.vision,
+                          throttle=self._config.throttle,
+                          gear_change=self._config.gear_change,
+                          visualise=self._config.visualise,
+                          no_of_visualisations=self._config.no_of_visualisations,
+                          torcs_server_port=self.torcs_server_port)
+
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
         self.torcs_server_config.generate_torcs_server_config()
-        print(">>>>>>>>>>>>>> Num traffic cars = {}<<<<<<<<<<<<<<".format(self.torcs_server_config.num_traffic_cars))
-        self.madras_agent_port = self._config.torcs_server_port + self.torcs_server_config.num_traffic_cars
+        self.madras_agent_port = self.torcs_server_port + self.torcs_server_config.num_traffic_cars
         if rank < self._config.no_of_visualisations and self._config.visualise:
-            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self._config.torcs_server_port)
+            command = 'export TORCS_PORT={} && vglrun torcs -t 10000000 -nolaptime'.format(self.torcs_server_port)
         else:
-            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self._config.torcs_server_port)
+            command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self._config.vision is True:
             command += ' -vision'
-        print("\n\n---------------------------------------------------Launching torcs from gymmadras on Port {}\n\n".format(self.torcs_server_port))
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
@@ -203,11 +204,10 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.step_num = 0
         if not self.initial_reset:
             self.torcs_server_config.generate_torcs_server_config()
-            print(">>>>>>>>>>>>>> Num traffic cars = {}<<<<<<<<<<<<<<".format(self.torcs_server_config.num_traffic_cars))
-            self.madras_agent_port = self._config.torcs_server_port + self.torcs_server_config.num_traffic_cars
+            self.madras_agent_port = self.torcs_server_port + self.torcs_server_config.num_traffic_cars
             self.client.port = self.madras_agent_port  # This is very bad code! But we wont need it any way in v2
             logging.info("Num traffic cars in server {}".format(self.torcs_server_config.num_traffic_cars))
-            print("Num traffic cars in server {}".format(self.torcs_server_config.num_traffic_cars))
+
         if self._config.traffic:
             self.traffic_manager.reset(self.torcs_server_config.num_traffic_cars)
 
@@ -243,9 +243,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.ob = None
         while self.ob is None:
             logging.info("{} Still waiting for observation".format(self.name))
-            print("{} Still waiting for observation at {}".format(self.name, self.madras_agent_port))
             try:
-                self.client = snakeoil3.Client(p=self.madras_agent_port, # self._config.torcs_server_port,
+                self.client = snakeoil3.Client(p=self.madras_agent_port,
                                                vision=self._config.vision,
                                                visualise=self._config.visualise)
                 # Open new UDP in vtorcs
@@ -272,7 +271,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         
         except Exception as e:
             logging.debug("Exception {} caught at port {}".format(
-                str(e), self._config.torcs_server_port))
+                str(e), self.torcs_server_port))
             self.wait_for_observation()
 
         game_state = {"torcs_reward": r,
@@ -306,8 +305,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
             desire[1] *= speed_scale  # Now in m/s
             # convert to km/hr
             desire[1] *= 3600/1000  # Now in km/hr
-            # Normalize to gym_torcs specs
-            desire[1] /= self.default_speed
+        # Normalize to gym_torcs specs
+        desire[1] /= self.default_speed
 
         reward = 0.0
 
@@ -319,7 +318,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                        self._config.early_stop)
             except Exception as e:
                 logging.debug("Exception {} caught at port {}".format(
-                              str(e), self._config.torcs_server_port))
+                              str(e), self.torcs_server_port))
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
@@ -347,15 +346,3 @@ class MadrasEnv(TorcsEnv, gym.Env):
             return self.step_pid(action)
         else:
             return self.step_vanilla(action)
-
-
-# class MadrasEnvMulti(MadrasEnv):
-#     def __init__(self, num_learning_agents=1, cfg_path=None):
-#         self.num_learning_agents = num_learning_agents
-#         self.num_traffic_agents = len(self._config.traffic)
-#         super(MadrasEnvMulti, self).__init__(cfg_path)
-#         self.learning_agent_ports = ([self._config.torcs_server_port] +
-#                                      [(self._config.torcs_server_port + self.num_traffic_agents + i)
-#                                       for i in range(num_learning_agents+1)])
-        
-        

@@ -1,6 +1,6 @@
 import numpy as np
 import gym
-from envs.gym_madras import MadrasEnv
+from MADRaS.envs.gym_madras import MadrasEnv
 import os
 import logging
 import logging.config

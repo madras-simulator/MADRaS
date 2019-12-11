@@ -15,9 +15,9 @@ The following enhancements were made for Multi-agent synchronization using excep
 import math
 from copy import deepcopy
 import numpy as np
-import utils.snakeoil3_gym_v2 as snakeoil3
-from utils.gym_torcs_v2 import TorcsEnv
-from controllers.pid import PIDController
+import MADRaS.utils.snakeoil3_gym_v2 as snakeoil3
+from MADRaS.utils.gym_torcs_v2 import TorcsEnv
+from MADRaS.controllers.pid import PIDController
 import gym
 from gym.utils import seeding
 import os
@@ -26,11 +26,11 @@ import signal
 import time
 from mpi4py import MPI
 import socket
-import envs.config_parser as config_parser
-import envs.reward_manager as rm
-import envs.done_manager_v2 as dm
-import envs.observation_manager as om
-import traffic.traffic as traffic
+import MADRaS.envs.config_parser as config_parser
+import MADRaS.utils.reward_manager as rm
+import MADRaS.utils.done_manager_v2 as dm
+import MADRaS.utils.observation_manager as om
+import MADRaS.traffic.traffic as traffic
 import multiprocessing
 
 DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options_v2.yml"

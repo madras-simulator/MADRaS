@@ -1,8 +1,8 @@
 import numpy as np
-from utils.gym_torcs import TorcsEnv
-import utils.snakeoil3_gym as snakeoil3
-from controllers.pid import PIDController
-import utils.madras_datatypes as md
+from MADRaS.utils.gym_torcs import TorcsEnv
+import MADRaS.utils.snakeoil3_gym as snakeoil3
+from MADRaS.controllers.pid import PIDController
+import MADRaS.utils.madras_datatypes as md
 from multiprocessing import Process
 from time import time
 import logging
@@ -71,7 +71,6 @@ class MadrasTrafficAgent(object):
         self.ob = None
         while self.ob is None:
             logging.debug("{} Still waiting for observation at {}".format(self.name, self.port))
-            print("{} Still waiting for observation at {}".format(self.name, self.port))
             try:
                 self.client = snakeoil3.Client(
                     p=self.port,
