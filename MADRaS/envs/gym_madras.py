@@ -108,27 +108,13 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self._config = MadrasConfig()
         self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None
-        if self._config.pid_assist:
-            self.action_dim = 2  # LanePos, Velocity
-            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, -140.0]),
-                                               high=np.asarray([1.0, 140.0]))  # Max speed of 140 kmph is allowed in TORCS
-        else:
-            self.action_dim = 3  # Steer, Accel, Brake
-            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, 0.0, 0.0]),
-                                               high=np.asarray([1.0, 1.0, 1.0]))
-
-        if self._config.normalize_actions:
-            self.action_space = gym.spaces.Box(low=-np.ones(self.action_dim),
-                                               high=np.ones(self.action_dim))
 
         self.observation_manager = om.ObservationManager(self._config.observations,
                                                          self._config.vision)
+        self.set_observation_and_action_spaces()
         self.reward_manager = rm.RewardManager(self._config.rewards)
         self.done_manager = dm.DoneManager(self._config.dones)
         self.torcs_server_port = self._config.torcs_server_port
-
-
-        self.observation_space = self.observation_manager.get_observation_space()
         
         self.state_dim = self.observation_manager.get_state_dim()  # No. of sensors input
         self.env_name = 'Madras_Env'
@@ -153,6 +139,21 @@ class MadrasEnv(TorcsEnv, gym.Env):
     @property
     def config(self):
         return self._config
+        
+    def set_observation_and_action_spaces(self):
+        if self._config.pid_assist:
+            self.action_dim = 2  # LanePos, Velocity
+            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, -140.0]),
+                                               high=np.asarray([1.0, 140.0]))  # Max speed of 140 kmph is allowed in TORCS
+        else:
+            self.action_dim = 3  # Steer, Accel, Brake
+            self.action_space = gym.spaces.Box(low=np.asarray([-1.0, 0.0, 0.0]),
+                                               high=np.asarray([1.0, 1.0, 1.0]))
+
+        if self._config.normalize_actions:
+            self.action_space = gym.spaces.Box(low=-np.ones(self.action_dim),
+                                               high=np.ones(self.action_dim))
+        self.observation_space = self.observation_manager.get_observation_space()
         
     def test_torcs_server_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

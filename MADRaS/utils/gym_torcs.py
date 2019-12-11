@@ -40,21 +40,26 @@ class TorcsEnv:
         self.currState = None      
         self.no_of_visualisations = no_of_visualisations
         self.torcs_server_port = torcs_server_port
-        # if throttle is False:                           # Throttle is generally True
-        #     self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
-        # else:
-        #     high = np.array([1., 1., 1.], dtype=madras.floatX)
-        #     low = np.array([-1., 0., 0.], dtype=madras.floatX)
-        #     self.action_space = spaces.Box(low=low, high=high)    # steer,accel,brake
+        self.set_observation_and_action_spaces()
 
-        # if vision is False:                             # Vision has to be set True if you need the images from the simulator 
-        #     high = np.inf * np.ones(self.obs_dim)
-        #     low = -high
-        #     self.observation_space = spaces.Box(low, high)
-        # else:
-        #     high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255], dtype=madras.floatX)
-        #     low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0], dtype=madras.floatX)
-        #     self.observation_space = spaces.Box(low=low, high=high)
+
+    def set_observation_and_action_spaces(self):
+        if self.throttle is False:                           # Throttle is generally True
+            self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
+        else:
+            high = np.array([1., 1., 1.], dtype=madras.floatX)
+            low = np.array([-1., 0., 0.], dtype=madras.floatX)
+            self.action_space = spaces.Box(low=low, high=high)    # steer,accel,brake
+
+        if self.vision is False:                             # Vision has to be set True if you need the images from the simulator 
+            high = np.inf * np.ones(self.obs_dim)
+            low = -high
+            self.observation_space = spaces.Box(low, high)
+        else:
+            high = np.array([1., np.inf, np.inf, np.inf, 1., np.inf, 1., np.inf, 255], dtype=madras.floatX)
+            low = np.array([0., -np.inf, -np.inf, -np.inf, 0., -np.inf, 0., -np.inf, 0], dtype=madras.floatX)
+            self.observation_space = spaces.Box(low=low, high=high)
+
 
 
     def step(self, step, client, u, early_stop=1):
