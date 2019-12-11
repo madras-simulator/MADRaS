@@ -25,6 +25,7 @@ import subprocess
 import signal
 import time
 from mpi4py import MPI
+import random
 import socket
 import yaml
 import MADRaS.utils.reward_manager as rm
@@ -35,7 +36,11 @@ import MADRaS.traffic.traffic as traffic
 import logging
 logger = logging.getLogger(__name__)
 
-DEFAULT_SIM_OPTIONS_FILE = "envs/data/sim_options.yml"
+path_and_file = os.path.realpath(__file__)
+path, file = os.path.split(path_and_file)
+DEFAULT_SIM_OPTIONS_FILE = os.path.join(path, "data", "sim_options.yml")
+
+
 
 class MadrasConfig(object):
     """Configuration class for MADRaS Gym environment."""
@@ -242,7 +247,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
         """Refresh client and wait for a valid observation to come in."""
         self.ob = None
         while self.ob is None:
-            logging.info("{} Still waiting for observation".format(self.name))
+
+            logging.debug("{} Still waiting for observation".format(self.name))
+
             try:
                 self.client = snakeoil3.Client(p=self.madras_agent_port,
                                                vision=self._config.vision,
@@ -270,8 +277,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
                                                    self._config.early_stop)
         
         except Exception as e:
-            logging.debug("Exception {} caught at port {}".format(
-                str(e), self.torcs_server_port))
+
+            logging.debug("Exception {} caught at port {}".format(str(e), self.torcs_server_port))
+
             self.wait_for_observation()
 
         game_state = {"torcs_reward": r,
@@ -319,6 +327,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             except Exception as e:
                 logging.debug("Exception {} caught at port {}".format(
                               str(e), self.torcs_server_port))
+
                 self.wait_for_observation()
             game_state = {"torcs_reward": r,
                           "torcs_done": done,
@@ -334,6 +343,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
             done = self.done_manager.get_done_signal(self._config, game_state)
             if done:
                 self.client.R.d["meta"] = True  # Terminate the episode
+                logging.info('Terminating PID {}'.format(self.client.serverPID))
                 break
 
         next_obs = self.observation_manager.get_obs(self.ob, self._config)

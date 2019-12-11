@@ -69,7 +69,7 @@ class RaceOver(MadrasDone):
             return True
         else:
             return False
-
+      
     def reset(self):
         self.num_steps = 0
 
@@ -106,6 +106,7 @@ class Collision(MadrasDone):
         self.num_steps += 1
         if self.damage < game_state["damage"]:
             logging.info("Done: Episode terminated because agent collided after {} steps.".format(self.num_steps))
+
             self.damage = 0.0
             return True
         else:
@@ -131,6 +132,7 @@ class TurnBackward(MadrasDone):
 
     def reset(self):
         self.num_steps = 0
+
 
 class OutOfTrack(MadrasDone):
     def __init__(self):

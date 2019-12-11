@@ -16,7 +16,7 @@ def test_madras_vanilla():
                  " Verify if the number of dimensions {} is right.".format(obs, len(obs)))
     logging.info("Testing step...")
     for t in range(20000):
-        obs, r, done, _ = env.step([-1.0, 1.0, -1.0])
+        obs, r, done, _ = env.step([0.0, 1.0, -1.0])
         logging.info("{}: reward={}, done={}".format(t, r, done))
         if done:
             env.reset()

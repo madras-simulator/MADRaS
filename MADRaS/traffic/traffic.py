@@ -71,6 +71,7 @@ class MadrasTrafficAgent(object):
         self.ob = None
         while self.ob is None:
             logging.debug("{} Still waiting for observation at {}".format(self.name, self.port))
+
             try:
                 self.client = snakeoil3.Client(
                     p=self.port,
@@ -95,6 +96,7 @@ class MadrasTrafficAgent(object):
         del random_seed
         self.wait_for_observation()
         logging.debug("[{}]: My server is PID: {}".format(self.name, self.client.serverPID))
+
         self.is_alive = True
         while True:
             if self.is_alive:
@@ -111,6 +113,7 @@ class MadrasTrafficAgent(object):
                 if done:
                     self.is_alive = False
                     logging.debug("{} died.".format(self.name))
+
 
     def get_front_opponents(self):
         return np.array([
@@ -257,4 +260,5 @@ class ParkedAgent(MadrasTrafficAgent):
             self.steer, self.accel, self.brake = action[0], action[1], action[2]
             self.avoid_impending_collision()
         self.prev_dist_from_start = self.distance_from_start
+
         return np.asarray([self.steer, self.accel, self.brake])

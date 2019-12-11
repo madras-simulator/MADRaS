@@ -59,6 +59,7 @@ import time
 import subprocess
 import logging
 logger = logging.getLogger(__name__)
+from mpi4py import MPI
 
 PI = 3.14159265359
 
@@ -325,7 +326,7 @@ class Client(object):
                 continue
             elif '***shutdown***' in sockdata:
                 logging.debug("[{}]: Server has stopped the race on {}. "
-                      "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
+                              "{} in {} place.".format(self.name, self.port, self.name, self.S.d['racePos']))
                 # self.shutdown() # AS: commenting because eval crashes after the agent completes one lap
                 return -1
             elif '***restart***' in sockdata:
@@ -352,7 +353,8 @@ class Client(object):
             message = repr(self.R)
             self.so.sendto(message.encode(), (self.host, self.port))
         except socket.error as emsg:
-            logging.debug("Error sending to server: %s" % emsg)
+            logging.debug("Error sending to server: {}".format(emsg))
+
             sys.exit(-1)
         if self.debug:
             logging.debug(self.R.fancyout())

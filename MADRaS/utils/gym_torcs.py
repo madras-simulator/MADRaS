@@ -37,7 +37,7 @@ class TorcsEnv:
         self.visualise = visualise
         self.initial_run = True
         self.time_step = 0
-        self.currState = None 
+        self.currState = None      
         self.no_of_visualisations = no_of_visualisations
         self.torcs_server_port = torcs_server_port
         # if throttle is False:                           # Throttle is generally True
@@ -137,6 +137,8 @@ class TorcsEnv:
         rpm = np.array(obs['rpm'])
 
         progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) - sp * np.abs(obs['trackPos'])
+        # progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) 
+        progress = 0
         reward = progress
 
         # collision detection
@@ -161,7 +163,7 @@ class TorcsEnv:
         return self.observation, reward, episode_terminate, {}
 
 
-    def reset(self, client, relaunch=True):        
+    def reset(self, client, relaunch=True):
         self.time_step = 0
         self.port = client.port
         if self.initial_reset is not True:
@@ -197,7 +199,9 @@ class TorcsEnv:
     def get_obs(self):
         return self.observation
 
-    def reset_torcs(self,client):        
+
+    def reset_torcs(self, client):
+        logging.debug("relaunch torcs in gym_torcs on port{}".format(client.port))
         command = 'kill {}'.format(client.serverPID)
         os.system(command)
        

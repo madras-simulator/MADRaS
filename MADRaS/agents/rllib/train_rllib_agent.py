@@ -2,11 +2,10 @@ import ray
 import ray.rllib.agents.ppo as ppo
 from ray.tune.logger import pretty_print
 import rllib_helpers as helpers
-import logging
+
 import logging.config
 import sys
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 helpers.register_madras()
 ray.init()
@@ -24,20 +23,7 @@ config["vf_clip_param"] = 20  # originally it was 10. We should consider scaling
 trainer = ppo.PPOTrainer(config=config, env="madras_env")
 
 # Can optionally call trainer.restore(path) to load a checkpoint.
-# trainer.restore('/home/anirban/ray_results/PPO_madras_env_2019-12-03_08-56-11fe8guncf/checkpoint_1713/checkpoint-1713')
-# trainer.restore('/home/anirban/ray_results/PPO_madras_env_2019-12-03_19-15-01h5u9w2bj/checkpoint_311/checkpoint-311')
 
-# Alpine checkpoint from which Spring was restored:
-# trainer.restore('/home/anirban/ray_results/PPO_madras_env_2019-12-04_06-36-12t0juqqsq/checkpoint_471/checkpoint-471')
-
-# Good Spring checkpoint
-# trainer.restore('/home/anirban/ray_results/PPO_madras_env_2019-12-04_09-37-1648nnevup/checkpoint_1802/checkpoint-1802')
-# Trying to solve the issue of crash at 15813-15817 step range which never seems to appear during training
-
-# Ckpt for Single agent in Parking traffic - 5 agents: agent starts in the left lane and swerves to the left
-# trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_14-56-5056r5q6ag/checkpoint_111/checkpoint-111")
-# Training with 6 Parking traffic agents: agent starts in the right lane - maybe it will learn to swerve right this time
-# trainer.restore("/home/anirban/ray_results/PPO_madras_env_2019-12-07_17-17-53zmnr5yxi/checkpoint_423/checkpoint-423")
 for i in range(10000):
    # Perform one iteration of training the policy with PPO
    result = trainer.train()
@@ -45,4 +31,4 @@ for i in range(10000):
 
    if i % 10 == 0:
        checkpoint = trainer.save()
-       print("checkpoint saved at", checkpoint)
+       logging.info("checkpoint saved at", checkpoint)
