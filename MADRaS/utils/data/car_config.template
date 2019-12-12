@@ -1,0 +1,4 @@
+        <section name="{section_no}">
+            <attnum name="idx" val="{car_no}"/>
+            <attstr name="module" val="scr_server"/>
+        </section>
