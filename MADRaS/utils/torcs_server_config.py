@@ -53,11 +53,11 @@ class TorcsConfig(object):
             self.car_config_template = f.read()
         with open(SCR_SERVER_CONFIG_TEMPLATE_PATH, 'r') as f:
             self.scr_server_config_template = f.read()
-        self.randomize = randomize)
+        self.randomize = randomize
         self.quickrace_xml_path = os.path.join(self.torcs_server_config_dir, "quickrace.xml")
         self.scr_server_xml_path = os.path.join(self.scr_server_config_dir, "scr_server.xml")
         self.traffic_car_type = cfg['traffic_car']
-        self.learning_car_type = cfg['learning_car']
+        self.learning_car_types = cfg['learning_car']
 
     def get_num_traffic_cars(self):
         if not self.randomize:
@@ -74,6 +74,13 @@ class TorcsConfig(object):
         logging.info("-------------------------CURRENT TRACK:{}------------------------".format(track_name))
         return track_name
 
+    def get_learning_car_type(self):
+        if not self.randomize:
+            learning_car_type = self.learning_car_types[0]
+        else:
+            learning_car_type = random.sample(self.learning_car_types, 1)[0]
+        return learning_car_type
+  
     def generate_torcs_server_config(self):
         self.num_traffic_cars = self.get_num_traffic_cars()
         self.num_learning_cars = 1
@@ -90,7 +97,7 @@ class TorcsConfig(object):
         torcs_server_config = self.quickrace_template.format(**context)
         with open(self.quickrace_xml_path, "w") as f:
             f.write(torcs_server_config)
-
+        self.learning_car_type = self.get_learning_car_type()
         car_name_list = ([self.traffic_car_type]*self.num_traffic_cars + [self.learning_car_type] +
                          [self.traffic_car_type]*(MAX_NUM_CARS-self.num_traffic_cars-1))
         scr_server_config = self.scr_server_config_template.format(*car_name_list)

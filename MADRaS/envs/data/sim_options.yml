@@ -10,7 +10,9 @@ server_config:
   torcs_server_config_dir: /home/<username>/.torcs/config/raceman/  # This must be the value for TORCS with rendering on
   scr_server_config_dir: /home/<username>/usr/local/share/games/torcs/drivers/scr_server/
   traffic_car: p406           # get full list of cars here: /home/anirban/usr/local/share/games/torcs/cars/
-  learning_car: car1-stock1   # get full list of cars here: /home/anirban/usr/local/share/games/torcs/cars/
+  learning_car:               # get full list of cars here: /home/anirban/usr/local/share/games/torcs/cars/
+    - car1-stock1
+    - car1-stock2
 
 randomize_env: True
 vision: False  # whether to use vision input
