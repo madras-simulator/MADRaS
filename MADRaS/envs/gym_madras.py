@@ -65,6 +65,9 @@ class MadrasConfig(object):
         self.traffic = []
         self.server_config = {}
         self.randomize_env = False
+        self.add_noise_to_actions = False
+        self.action_noise_std = 0.001
+        self.noisy_observations = False
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -79,7 +82,8 @@ class MadrasConfig(object):
                              'pid_latency', 'visualise', 'no_of_visualizations', 'track_len',
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
-                             'pid_settings', 'traffic', "server_config", "randomize_env"]
+                             'pid_settings', 'traffic', "server_config", "randomize_env",
+                             'add_noise_to_actions', 'action_noise_std', 'noisy_observations']
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -201,6 +205,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
             command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self._config.vision is True:
             command += ' -vision'
+        if self._config.noisy_observations:
+            command += ' -noisy'
 
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
@@ -354,6 +360,9 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
     def step(self, action):
         self.step_num += 1
+        if self._config.add_noise_to_actions:
+            noise = np.random.normal(scale=self._config.action_noise_std, size=self.action_dim)
+            action += noise
         if self._config.pid_assist:
             return self.step_pid(action)
         else:
