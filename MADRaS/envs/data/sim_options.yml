@@ -15,6 +15,9 @@ server_config:
     - car1-stock2
 
 randomize_env: True
+add_noise_to_actions: True
+action_noise_std: 0.01  # Only in effect when add_noise_to_actions is True
+
 vision: False  # whether to use vision input
 throttle: True
 gear_change: False
