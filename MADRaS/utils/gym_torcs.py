@@ -27,7 +27,7 @@ class TorcsEnv:
     default_speed = 50
     initial_reset = False
 
-    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, torcs_server_port=3001, name='MadrasAgent'):
+    def __init__(self, vision=False, throttle=False, gear_change=False, obs_dim=29, act_dim=3,visualise=False,no_of_visualisations=1, torcs_server_port=3001, name='MadrasAgent', noisy_observations=False):
         self.name = name
         self.vision = vision
         self.throttle = throttle
@@ -40,6 +40,7 @@ class TorcsEnv:
         self.currState = None      
         self.no_of_visualisations = no_of_visualisations
         self.torcs_server_port = torcs_server_port
+        self.noisy_observations = noisy_observations
         self.set_observation_and_action_spaces()
 
 
@@ -220,6 +221,8 @@ class TorcsEnv:
             command = 'export TORCS_PORT={} && torcs -t 10000000 -r ~/.torcs/config/raceman/quickrace.xml -nolaptime'.format(self.torcs_server_port)
         if self.vision is True:
             command += ' -vision'
+        if self.noisy_observations:
+            command += ' -noisy'
         self.torcs_proc = subprocess.Popen([command], shell=True, preexec_fn=os.setsid)
         time.sleep(1)
 
