@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 path_and_file = os.path.realpath(__file__)
 path, file = os.path.split(path_and_file)
-DEFAULT_SIM_OPTIONS_FILE = os.path.join(path, "data", "madras_config.yml")
+DEFAULT_MADRAS_CONFIG_FILE = os.path.join(path, "data", "madras_config.yml")
 
 
 
@@ -68,6 +68,7 @@ class MadrasConfig(object):
         self.add_noise_to_actions = False
         self.action_noise_std = 0.001
         self.noisy_observations = False
+        self.track_limits = {'low': -1, 'high': 1}
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -83,7 +84,7 @@ class MadrasConfig(object):
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
                              'pid_settings', 'traffic', "server_config", "randomize_env",
-                             'add_noise_to_actions', 'action_noise_std', 'noisy_observations']
+                             'add_noise_to_actions', 'action_noise_std', 'noisy_observations', 'track_limits']
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -100,7 +101,7 @@ class MadrasConfig(object):
 
 def parse_yaml(yaml_file):
     if not yaml_file:
-        yaml_file = DEFAULT_SIM_OPTIONS_FILE
+        yaml_file = DEFAULT_MADRAS_CONFIG_FILE
     with open(yaml_file, 'r') as f:
         return yaml.safe_load(f)
 
@@ -193,7 +194,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           gear_change=self._config.gear_change,
                           visualise=self._config.visualise,
                           no_of_visualisations=self._config.no_of_visualisations,
-                          torcs_server_port=self.torcs_server_port)
+                          torcs_server_port=self.torcs_server_port,
+                          noisy_observations=self._config.noisy_observations)
 
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
@@ -223,6 +225,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
 
         if self._config.traffic:
             self.traffic_manager.reset(self.torcs_server_config.num_traffic_cars)
+
+        self._config.track_len = self.torcs_server_config.track_length
 
         if self.initial_reset:
             self.wait_for_observation()
@@ -309,11 +313,17 @@ class MadrasEnv(TorcsEnv, gym.Env):
             self.client.R.d["meta"] = True  # Terminate the episode
             logging.info('Terminating PID {}'.format(self.client.serverPID))
 
+        info["distRaced"] = self.client.S.d["distRaced"] 
+        info["racePos"] = self.client.S.d["racePos"]
+
         return next_obs, reward, done, info
 
 
     def step_pid(self, desire):
         """Execute single step with lane_pos, velocity controls."""
+
+        lane_pos_scale = self._config.track_limits['high'] - self._config.track_limits['low']
+        desire[0] = self._config.track_limits['low'] + lane_pos_scale*desire[0]
         if self._config.normalize_actions:
             # [-1, 1] should correspond to [-self._config.target_speed,
             #                                self._config.target_speed]
@@ -355,6 +365,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
                 break
 
         next_obs = self.observation_handler.get_obs(self.ob, self._config)
+        info["distRaced"] = self.client.S.d["distRaced"]
+        info["racePos"] = self.client.S.d["racePos"]
 
         return next_obs, reward, done, info
 
@@ -364,6 +376,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
             noise = np.random.normal(scale=self._config.action_noise_std, size=self.action_dim)
             action += noise
         if self._config.pid_assist:
-            return self.step_pid(action)
+            return self.step_pid(deepcopy(action))
         else:
-            return self.step_vanilla(action)
+            return self.step_vanilla(deepcopy(action))

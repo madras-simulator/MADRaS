@@ -2,6 +2,7 @@ import numpy as np
 import random
 import os
 import logging
+import MADRaS.utils.data.track_details as track_details
 logger = logging.getLogger(__name__)
 
 path_and_file = os.path.realpath(__file__)
@@ -12,7 +13,19 @@ CAR_CONFIG_TEMPATE_PATH = os.path.join(path, "data", "car_config.template")
 SCR_SERVER_CONFIG_TEMPLATE_PATH = os.path.join(path, "data", "scr_server_config.template")
 
 MAX_NUM_CARS = 10  # There are 10 scr-servers in the TORCS GUI
-TRACK_NAMES = [
+
+DIRT_TRACK_NAMES = [
+    "dirt-1",
+    "dirt-2",
+    "dirt-3",
+    "dirt-4",
+    "dirt-5",
+    "dirt-6",
+    "mixed-1",
+    "mixed-2"
+]
+
+ROAD_TRACK_NAMES = [
     "aalborg",
     "alpine-1",
     "alpine-2",
@@ -22,7 +35,7 @@ TRACK_NAMES = [
     "g-track-3",
     "corkscrew",
     "eroad",
-    "e-track-1",
+    # "e-track-1", # Segmentation fault from torcs: no track observations after about 1000 steps
     "e-track-2",
     "e-track-3",
     "e-track-4",
@@ -37,11 +50,13 @@ TRACK_NAMES = [
 ]
 
 
+
 class TorcsConfig(object):
     def __init__(self, cfg, randomize=False):
         self.max_cars = cfg["max_cars"] if "max_cars" in cfg else MAX_NUM_CARS
-        self.track_category = "road"  # for test purposes - will add "dirt" later
-        self.track_names = cfg["track_names"] if  "track_names" in cfg else TRACK_NAMES
+        self.min_traffic_cars = cfg["min_traffic_cars"] if "min_traffic_cars" in cfg else 0
+        self.track_category = cfg["track_category"] if "track_category" in cfg else "road"
+        self.track_names = cfg["track_names"] if "track_names" in cfg else ROAD_TRACK_NAMES
         self.distance_to_start = cfg["distance_to_start"] if "distance_to_start" in cfg else 0
         self.torcs_server_config_dir = (cfg["torcs_server_config_dir"] if "torcs_server_config_dir" in cfg
                                         else "/home/anirban/.torcs/config/raceman/")
@@ -56,14 +71,16 @@ class TorcsConfig(object):
         self.randomize = randomize
         self.quickrace_xml_path = os.path.join(self.torcs_server_config_dir, "quickrace.xml")
         self.scr_server_xml_path = os.path.join(self.scr_server_config_dir, "scr_server.xml")
-        self.traffic_car_type = cfg['traffic_car']
+        self.traffic_car_type = cfg['traffic_car'] if 'traffic_car' in cfg else 'car1-trb1'
         self.learning_car_types = cfg['learning_car']
+        self.track_length = 0
+        self.track_width = 0
 
     def get_num_traffic_cars(self):
         if not self.randomize:
             return self.max_cars-1
         else:
-            num_traffic_cars = np.random.randint(low=0, high=self.max_cars)
+            num_traffic_cars = np.random.randint(low=self.min_traffic_cars, high=self.max_cars)
             return num_traffic_cars
 
     def get_track_name(self):
@@ -72,6 +89,8 @@ class TorcsConfig(object):
         else:
             track_name = random.sample(self.track_names, 1)[0]
         logging.info("-------------------------CURRENT TRACK:{}------------------------".format(track_name))
+        self.track_length = track_details.track_lengths[track_name]
+        self.track_width = track_details.track_widths[track_name]
         return track_name
 
     def get_learning_car_type(self):
@@ -79,10 +98,12 @@ class TorcsConfig(object):
             learning_car_type = self.learning_car_types[0]
         else:
             learning_car_type = random.sample(self.learning_car_types, 1)[0]
+        logging.info("-------------------------CURRENT CAR:{}------------------------".format(learning_car_type))
         return learning_car_type
-  
+
     def generate_torcs_server_config(self):
         self.num_traffic_cars = self.get_num_traffic_cars()
+        logging.info("-----------------------Num. Traffic Cars:{}-----------------------".format(self.num_traffic_cars))
         self.num_learning_cars = 1
 
         car_config = "\n".join(self.car_config_template.format(

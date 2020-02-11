@@ -93,7 +93,16 @@ class TorcsObs(MadrasObs):
 
 class SingleAgentSimpleLapObs(MadrasObs):
     def get_obs(self, full_obs):
-        track = [(x if x > 0 else 0) for x in full_obs.track]
+        track = []
+        for x in full_obs.track:
+            if x > 0:
+                if x > 1:
+                    track.append(1)
+                else:
+                    track.append(x)
+            else:
+                track.append(0)
+
         obs = np.hstack((full_obs.angle,
                         track,
                         full_obs.trackPos,
@@ -121,14 +130,23 @@ class SingleAgentSimpleLapObs(MadrasObs):
 
 class SingleAgentInTrafficObs(MadrasObs):
     def get_obs(self, full_obs):
-        track = [(x if x > 0 else 0) for x in full_obs.track]
+        track = []
+        for x in full_obs.track:
+            if x > 0:
+                if x > 1:
+                    track.append(1)
+                else:
+                    track.append(x)
+            else:
+                track.append(0)
+        opponents = [(x if x < 1 else 1) for x in full_obs.opponents]
         obs = np.hstack((full_obs.angle,
                         track,
                         full_obs.trackPos,
                         full_obs.speedX,
                         full_obs.speedY,
                         full_obs.speedZ,
-                        full_obs.opponents))
+                        opponents))
         return obs
     
     @property
