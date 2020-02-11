@@ -3,7 +3,7 @@ import math
 import logging
 logger = logging.getLogger(__name__)
 
-class DoneManager(object):
+class DoneHandler(object):
     """Composes the done function from a given done configuration."""
     def __init__(self, cfg):
         self.dones = {}

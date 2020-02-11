@@ -4,7 +4,7 @@ import math
 from copy import deepcopy
 
 
-class RewardManager(object):
+class RewardHandler(object):
     """Composes the reward function from a given reward configuration."""
     def __init__(self, cfg):
         self.rewards = {}

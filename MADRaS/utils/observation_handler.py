@@ -4,7 +4,7 @@ import MADRaS.utils.madras_datatypes as md
 
 MadrasDatatypes = md.MadrasDatatypes()
 
-class ObservationManager(object):
+class ObservationHandler(object):
     """Composes the observation vector for a given observation mode."""
     def __init__(self, cfg, vision=False):
         self.cfg = cfg
