@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 MadrasDatatypes = md.MadrasDatatypes()
 
-class MadrasTrafficManager(object):
+class MadrasTrafficHandler(object):
     """Creates the traffic agents for a given training configuration."""
     def __init__(self, torcs_server_port, num_learning_agents, cfg):
         self.traffic_agents = OrderedDict()

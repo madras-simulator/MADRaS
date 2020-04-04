@@ -28,9 +28,9 @@ from mpi4py import MPI
 import random
 import socket
 import yaml
-import MADRaS.utils.reward_manager as rm
-import MADRaS.utils.done_manager as dm
-import MADRaS.utils.observation_manager as om
+import MADRaS.utils.reward_handler as rh
+import MADRaS.utils.done_handler as dh
+import MADRaS.utils.observation_handler as oh
 import MADRaS.utils.torcs_server_config as torcs_config
 import MADRaS.traffic.traffic as traffic
 import logging
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 path_and_file = os.path.realpath(__file__)
 path, file = os.path.split(path_and_file)
-DEFAULT_SIM_OPTIONS_FILE = os.path.join(path, "data", "sim_options.yml")
+DEFAULT_MADRAS_CONFIG_FILE = os.path.join(path, "data", "madras_config.yml")
 
 
 
@@ -68,6 +68,7 @@ class MadrasConfig(object):
         self.add_noise_to_actions = False
         self.action_noise_std = 0.001
         self.noisy_observations = False
+        self.track_limits = {'low': -1, 'high': 1}
 
     def update(self, cfg_dict):
         """Update the configuration terms from a dictionary.
@@ -83,7 +84,7 @@ class MadrasConfig(object):
                              'max_steps', 'target_speed', 'early_stop', 'accel_pid',
                              'steer_pid', 'normalize_actions', 'observations', 'rewards', 'dones',
                              'pid_settings', 'traffic', "server_config", "randomize_env",
-                             'add_noise_to_actions', 'action_noise_std', 'noisy_observations']
+                             'add_noise_to_actions', 'action_noise_std', 'noisy_observations', 'track_limits']
         for key in direct_attributes:
             if key in cfg_dict:
                 exec("self.{} = {}".format(key, cfg_dict[key]))
@@ -100,7 +101,7 @@ class MadrasConfig(object):
 
 def parse_yaml(yaml_file):
     if not yaml_file:
-        yaml_file = DEFAULT_SIM_OPTIONS_FILE
+        yaml_file = DEFAULT_MADRAS_CONFIG_FILE
     with open(yaml_file, 'r') as f:
         return yaml.safe_load(f)
 
@@ -114,14 +115,14 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self._config.update(parse_yaml(cfg_path))
         self.torcs_proc = None
 
-        self.observation_manager = om.ObservationManager(self._config.observations,
+        self.observation_handler = oh.ObservationHandler(self._config.observations,
                                                          self._config.vision)
         self.set_observation_and_action_spaces()
-        self.reward_manager = rm.RewardManager(self._config.rewards)
-        self.done_manager = dm.DoneManager(self._config.dones)
+        self.reward_handler = rh.RewardHandler(self._config.rewards)
+        self.done_handler = dh.DoneHandler(self._config.dones)
         self.torcs_server_port = self._config.torcs_server_port
         
-        self.state_dim = self.observation_manager.get_state_dim()  # No. of sensors input
+        self.state_dim = self.observation_handler.get_state_dim()  # No. of sensors input
         self.env_name = 'Madras_Env'
         self.client_type = 0  # Snakeoil client type
         self.initial_reset = True
@@ -158,7 +159,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         if self._config.normalize_actions:
             self.action_space = gym.spaces.Box(low=-np.ones(self.action_dim),
                                                high=np.ones(self.action_dim))
-        self.observation_space = self.observation_manager.get_observation_space()
+        self.observation_space = self.observation_handler.get_observation_space()
         
     def test_torcs_server_port(self):
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -184,7 +185,7 @@ class MadrasEnv(TorcsEnv, gym.Env):
         self.test_torcs_server_port()
 
         if self._config.traffic:
-            self.traffic_manager = traffic.MadrasTrafficManager(
+            self.traffic_manager = traffic.MadrasTrafficHandler(
                 self.torcs_server_port, 1, self._config.traffic)
 
         TorcsEnv.__init__(self,
@@ -193,7 +194,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           gear_change=self._config.gear_change,
                           visualise=self._config.visualise,
                           no_of_visualisations=self._config.no_of_visualisations,
-                          torcs_server_port=self.torcs_server_port)
+                          torcs_server_port=self.torcs_server_port,
+                          noisy_observations=self._config.noisy_observations)
 
         command = None
         rank = MPI.COMM_WORLD.Get_rank()
@@ -224,6 +226,8 @@ class MadrasEnv(TorcsEnv, gym.Env):
         if self._config.traffic:
             self.traffic_manager.reset(self.torcs_server_config.num_traffic_cars)
 
+        self._config.track_len = self.torcs_server_config.track_length
+
         if self.initial_reset:
             self.wait_for_observation()
             self.initial_reset = False
@@ -241,11 +245,11 @@ class MadrasEnv(TorcsEnv, gym.Env):
                     logging.info("Reset: Reset failed as agent started off track. Retrying...")
 
         self.distance_traversed = 0
-        s_t = self.observation_manager.get_obs(self.ob, self._config)
+        s_t = self.observation_handler.get_obs(self.ob, self._config)
         if self._config.pid_assist:
             self.PID_controller.reset()
-        self.reward_manager.reset()
-        self.done_manager.reset()
+        self.reward_handler.reset()
+        self.done_handler.reset()
         logging.info("Reset: Starting new episode")
         if np.any(np.asarray(self.ob.track) < 0):
             logging.info("Reset produced bad track values.")
@@ -298,22 +302,28 @@ class MadrasEnv(TorcsEnv, gym.Env):
                       "trackPos": self.client.S.d["trackPos"],
                       "racePos": self.client.S.d["racePos"],
                       "track": self.client.S.d["track"]}
-        reward = self.reward_manager.get_reward(self._config, game_state)
+        reward = self.reward_handler.get_reward(self._config, game_state)
 
-        done = self.done_manager.get_done_signal(self._config, game_state)
+        done = self.done_handler.get_done_signal(self._config, game_state)
 
-        next_obs = self.observation_manager.get_obs(self.ob, self._config)
+        next_obs = self.observation_handler.get_obs(self.ob, self._config)
         if done:
             if self._config.traffic:
                 self.traffic_manager.kill_all_traffic_agents()
             self.client.R.d["meta"] = True  # Terminate the episode
             logging.info('Terminating PID {}'.format(self.client.serverPID))
 
+        info["distRaced"] = self.client.S.d["distRaced"] 
+        info["racePos"] = self.client.S.d["racePos"]
+
         return next_obs, reward, done, info
 
 
     def step_pid(self, desire):
         """Execute single step with lane_pos, velocity controls."""
+
+        lane_pos_scale = self._config.track_limits['high'] - self._config.track_limits['low']
+        desire[0] = self._config.track_limits['low'] + lane_pos_scale*desire[0]
         if self._config.normalize_actions:
             # [-1, 1] should correspond to [-self._config.target_speed,
             #                                self._config.target_speed]
@@ -345,16 +355,18 @@ class MadrasEnv(TorcsEnv, gym.Env):
                           "trackPos": self.client.S.d["trackPos"],
                           "racePos": self.client.S.d["racePos"],
                           "track": self.client.S.d["track"]}
-            reward += self.reward_manager.get_reward(self._config, game_state)
+            reward += self.reward_handler.get_reward(self._config, game_state)
             if self._config.pid_assist:
                 self.PID_controller.update(self.ob)
-            done = self.done_manager.get_done_signal(self._config, game_state)
+            done = self.done_handler.get_done_signal(self._config, game_state)
             if done:
                 self.client.R.d["meta"] = True  # Terminate the episode
                 logging.info('Terminating PID {}'.format(self.client.serverPID))
                 break
 
-        next_obs = self.observation_manager.get_obs(self.ob, self._config)
+        next_obs = self.observation_handler.get_obs(self.ob, self._config)
+        info["distRaced"] = self.client.S.d["distRaced"]
+        info["racePos"] = self.client.S.d["racePos"]
 
         return next_obs, reward, done, info
 
@@ -364,6 +376,6 @@ class MadrasEnv(TorcsEnv, gym.Env):
             noise = np.random.normal(scale=self._config.action_noise_std, size=self.action_dim)
             action += noise
         if self._config.pid_assist:
-            return self.step_pid(action)
+            return self.step_pid(deepcopy(action))
         else:
-            return self.step_vanilla(action)
+            return self.step_vanilla(deepcopy(action))

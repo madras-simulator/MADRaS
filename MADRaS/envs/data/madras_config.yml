@@ -1,6 +1,7 @@
 torcs_server_port: 60934
 server_config:
   max_cars: 10
+  min_traffic_cars: 1
   track_names:
     - forza
     - aalborg

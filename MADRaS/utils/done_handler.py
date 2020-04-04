@@ -3,7 +3,7 @@ import math
 import logging
 logger = logging.getLogger(__name__)
 
-class DoneManager(object):
+class DoneHandler(object):
     """Composes the done function from a given done configuration."""
     def __init__(self, cfg):
         self.dones = {}
@@ -104,9 +104,12 @@ class Collision(MadrasDone):
     def check_done(self, game_config, game_state):
         del game_config
         self.num_steps += 1
+        if self.num_steps == 1:
+            self.damage = game_state["damage"]
+            return False
+
         if self.damage < game_state["damage"]:
             logging.info("Done: Episode terminated because agent collided after {} steps.".format(self.num_steps))
-
             self.damage = 0.0
             return True
         else:
@@ -139,9 +142,11 @@ class OutOfTrack(MadrasDone):
         self.num_steps = 0
 
     def check_done(self, game_config, game_state):
-        del game_config
+        self.track_limits = game_config.track_limits
         self.num_steps += 1
-        if game_state["trackPos"] < -1 or game_state["trackPos"] > 1 or np.any(np.asarray(game_state["track"]) < 0):
+        if (game_state["trackPos"] < self.track_limits['low'] or 
+            game_state["trackPos"] > self.track_limits['high'] or 
+            np.any(np.asarray(game_state["track"]) < 0)):
             logging.info("Done: Episode terminated because agent went out of track after {} steps.".format(self.num_steps))
             self.num_steps = 0
             return True

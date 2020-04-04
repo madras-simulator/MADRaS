@@ -4,7 +4,7 @@ import math
 from copy import deepcopy
 
 
-class RewardManager(object):
+class RewardHandler(object):
     """Composes the reward function from a given reward configuration."""
     def __init__(self, cfg):
         self.rewards = {}
@@ -23,6 +23,8 @@ class RewardManager(object):
         reward = 0.0
         for reward_function in self.rewards.values():
             reward += reward_function.compute_reward(game_config, game_state)
+        if math.isnan(reward):
+            reward = 0.0
         return reward
 
     def reset(self):
@@ -112,11 +114,16 @@ class AvgSpeedReward(MadrasReward):
 class CollisionPenalty(MadrasReward):
     def __init__(self, cfg):
         self.damage = 0.0
+        self.num_steps = 0
         super(CollisionPenalty, self).__init__(cfg)
 
     def compute_reward(self, game_config, game_state):
         del game_config
         reward = 0.0
+        self.num_steps += 1
+        if self.num_steps == 1:
+            self.damage = game_state["damage"]
+
         if self.damage < game_state["damage"]:
             reward = -self.cfg["scale"]
         return reward
@@ -128,6 +135,14 @@ class TurnBackwardPenalty(MadrasReward):
         reward = 0.0
         if np.cos(game_state["angle"]) < 0:
             reward = -self.cfg["scale"]
+        return reward
+
+class RankOneReward(MadrasReward):
+    def compute_reward(self, game_config, game_state):
+        if game_state["racePos"] == 1:
+            reward = self.cfg["scale"]
+        else:
+            reward = 0.0
         return reward
 
 
